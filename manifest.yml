@@ -1,0 +1,82 @@
+modules:
+  jira:projectPage:
+    - key: standup-tracker-project-page
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      layout: native
+      title: Team Sync
+      pages:
+        - title: Tổng quan team
+          route: dashboard
+        - title: Team Sync hôm nay
+          route: log
+        - title: Lịch sử team
+          route: history
+        - title: Tổng kết tuần
+          route: summary
+  jira:issuePanel:
+    - key: standup-issue-panel
+      resource: issue-panel
+      resolver:
+        function: resolver
+      render: native
+      title: Team Sync
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+  jira:adminPage:
+    - key: standup-admin-settings
+      resource: admin-settings
+      resolver:
+        function: resolver
+      render: native
+      title: Team Sync — General Settings
+      useAsConfig: true
+    - key: standup-admin-team
+      resource: admin-team
+      resolver:
+        function: resolver
+      render: native
+      title: Team Sync — Team Configuration
+      useAsGetStarted: true
+    - key: standup-admin-data
+      resource: admin-data
+      resolver:
+        function: resolver
+      render: native
+      title: Team Sync — Data & Privacy
+  scheduledTrigger:
+    - key: standup-retention-purge
+      function: purge-retention
+      interval: day
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: purge-retention
+      handler: purge-retention.run
+      timeoutSeconds: 120
+resources:
+  - key: main
+    path: src/frontend/project/index.jsx
+  - key: issue-panel
+    path: src/frontend/issue/index.jsx
+  - key: admin-settings
+    path: src/frontend/admin/settings.jsx
+  - key: admin-team
+    path: src/frontend/admin/team.jsx
+  - key: admin-data
+    path: src/frontend/admin/data.jsx
+permissions:
+  scopes:
+    - storage:app
+    - read:jira-user
+    - read:jira-work
+    - read:project:jira
+    - read:board-scope:jira-software
+    - read:sprint:jira-software
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/0adbbf6d-eba5-40d9-9731-f50557bdc7ca

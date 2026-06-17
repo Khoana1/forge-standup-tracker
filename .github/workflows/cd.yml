@@ -1,0 +1,54 @@
+name: CD
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target Forge environment
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and test
+        run: npm run lint && npm run test
+
+      - name: Install Forge CLI
+        run: npm install -g @forge/cli
+
+      - name: Deploy to staging
+        if: github.event_name == 'push' || inputs.environment == 'staging'
+        run: forge deploy --environment staging --non-interactive
+        env:
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+
+      - name: Deploy to production
+        if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
+        run: forge deploy --environment production --non-interactive
+        env:
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
