@@ -15,7 +15,7 @@ import ForgeReconciler, {
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
 
-const APP_SCOPES = ['storage:app', 'read:jira-user', 'read:jira-work'];
+const APP_SCOPES = ['storage:app', 'read:jira-user', 'read:jira-work', 'write:jira-work'];
 
 const SettingsPage = () => {
   const { handleSubmit, register, getFieldId, setValue, watch } = useForm();
@@ -35,6 +35,7 @@ const SettingsPage = () => {
         setValue('skipWeekends', settings.skipWeekends ?? true);
         setValue('weeklySummaryAuto', settings.weeklySummaryAuto ?? false);
         setValue('blockerAlertDays', String(settings.blockerAlertDays ?? 1));
+        setValue('notifyProjectAdminsOnProblem', settings.notifyProjectAdminsOnProblem ?? true);
       })
       .catch((e) => setError(e?.message ?? 'Could not load settings.'))
       .finally(() => setLoading(false));
@@ -53,6 +54,7 @@ const SettingsPage = () => {
         skipWeekends: Boolean(data.skipWeekends),
         weeklySummaryAuto: Boolean(data.weeklySummaryAuto),
         blockerAlertDays: Number(data.blockerAlertDays),
+        notifyProjectAdminsOnProblem: Boolean(data.notifyProjectAdminsOnProblem),
       });
       setSuccess(true);
     } catch (e) {
@@ -103,7 +105,7 @@ const SettingsPage = () => {
             <Toggle {...register('skipWeekends')} id={getFieldId('skipWeekends')} />
           </Stack>
           <Stack space="space.100">
-            <Label labelFor={getFieldId('weeklySummaryAuto')}>Tự tạo tổng kết tuần</Label>
+            <Label labelFor={getFieldId('weeklySummaryAuto')}>Tự tạo tổng kết sprint (2 tuần)</Label>
             <Toggle {...register('weeklySummaryAuto')} id={getFieldId('weeklySummaryAuto')} />
           </Stack>
         </Stack>
@@ -113,6 +115,19 @@ const SettingsPage = () => {
           <Stack space="space.100">
             <Label labelFor={getFieldId('blockerAlertDays')}>Cảnh báo khó khăn chưa xử lý (ngày)</Label>
             <Textfield {...register('blockerAlertDays')} type="number" min={0} max={14} />
+          </Stack>
+          <Stack space="space.100">
+            <Label labelFor={getFieldId('notifyProjectAdminsOnProblem')}>
+              Gửi email cho quản trị project khi có Problems
+            </Label>
+            <Toggle
+              {...register('notifyProjectAdminsOnProblem')}
+              id={getFieldId('notifyProjectAdminsOnProblem')}
+            />
+            <Text color="color.text.subtle" size="small">
+              Email gửi tới các user trong role Administrators của project (qua Jira notification).
+              Chỉ gửi khi có vấn đề mới hoặc nội dung Problems thay đổi.
+            </Text>
           </Stack>
         </Stack>
 

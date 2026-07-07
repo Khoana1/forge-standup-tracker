@@ -27,6 +27,8 @@ import {
   EmptyPrompt,
   MemberSelectCard,
   PageHeader,
+  StandupFieldContent,
+  StatCard,
 } from '../components/ui.jsx';
 
 const ResolveBlockerModal = ({ entry, projectKey, date, onClose, onSaved }) => {
@@ -77,7 +79,7 @@ const ResolveBlockerModal = ({ entry, projectKey, date, onClose, onSaved }) => {
               <Text size="small" color="color.text.subtle">
                 Vấn đề
               </Text>
-              <Text color="color.text.danger">{entry.blockers}</Text>
+              <StandupFieldContent value={entry.blockers} color="color.text.danger" />
             </Stack>
             <Stack space="space.050">
               <Label labelFor={getFieldId('resolutionPlan')}>Phương án giải quyết</Label>
@@ -164,6 +166,12 @@ export const DashboardView = ({ projectKey, onLogStandup }) => {
   const todayLabel = isoToDayMonth(data?.today);
   const timeline = data?.timeline ?? [];
   const members = data?.members ?? [];
+  const stats = data?.stats ?? {};
+  const completionToday = stats.completionToday ?? { logged: 0, total: 0, pending: 0 };
+  const todayPct = completionToday.total
+    ? Math.round((completionToday.logged / completionToday.total) * 100)
+    : 0;
+  const sprintPct = stats.sprintCompletion ?? 0;
   const pageTitle = formatTeamSyncTitle(data?.activeSprint?.name);
   const teamLabel = data?.projectKey ?? projectKey;
 
@@ -188,6 +196,41 @@ export const DashboardView = ({ projectKey, onLogStandup }) => {
 
       {error ? <SectionMessage appearance="error">{error}</SectionMessage> : null}
       {exportMsg ? <SectionMessage appearance="success">{exportMsg}</SectionMessage> : null}
+
+      <Inline space="space.150" alignBlock="stretch" shouldWrap>
+        <Box grow="fill">
+          <StatCard
+            label="Team Sync hôm nay"
+            value={`${todayPct}%`}
+            progress={todayPct}
+            sub={
+              completionToday.total > 0
+                ? `${completionToday.logged}/${completionToday.total} thành viên đã ghi`
+                : 'Chưa có thành viên trong team'
+            }
+          />
+        </Box>
+        <Box grow="fill">
+          <StatCard
+            label="Tiến độ sprint (2 tuần)"
+            value={`${sprintPct}%`}
+            progress={sprintPct}
+            sub="Tỷ lệ ghi Team Sync các ngày làm việc"
+          />
+        </Box>
+        <Box grow="fill">
+          <StatCard
+            label="Vấn đề đang mở"
+            value={String(stats.activeBlockers ?? 0)}
+            appearance={stats.activeBlockers > 0 ? 'danger' : undefined}
+            sub={
+              stats.staleBlockers > 0
+                ? `${stats.staleBlockers} quá hạn cần xử lý`
+                : 'Không có vấn đề quá hạn'
+            }
+          />
+        </Box>
+      </Inline>
 
       {members.length ? (
         <Stack space="space.150">

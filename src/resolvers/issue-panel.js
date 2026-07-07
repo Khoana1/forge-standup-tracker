@@ -1,7 +1,12 @@
 import { createLogger } from '../lib/logger.js';
-import { fetchIssuesByKeys, searchProjectIssues } from '../lib/jira-issues.js';
-import { fetchMyDisplayName, validateProjectExists } from '../lib/jira-users.js';
-import { queryProjectEntries, saveStandupEntry, getStandupEntry } from '../lib/standup-store.js';
+import {
+  fetchIssuesByKeys,
+  searchProjectIssues,
+  transitionIssueStatus,
+} from '../lib/jira-issues.js';
+import { validateProjectExists } from '../lib/jira-users.js';
+import { persistStandupSubmission } from '../lib/standup-submit.js';
+import { queryProjectEntries } from '../lib/standup-store.js';
 import {
   validateIssueHistoryPayload,
   validateIssueSearchPayload,
@@ -71,26 +76,18 @@ export const submitIssueStandup = async ({ payload, context }) => {
     ...(contextIssueKey ? [contextIssueKey] : []),
   ];
 
-  const displayName = await fetchMyDisplayName();
-  const existing = await getStandupEntry(projectKey, date, accountId);
+  const result = await persistStandupSubmission({
+    payload,
+    context,
+    validation,
+    entryOverrides: {
+      linkedIssueKeys: [...new Set(linkedIssueKeys)],
+      contextIssueKey,
+    },
+  });
 
-  const entry = {
-    accountId,
-    displayName,
-    projectKey,
-    date,
-    yesterday: payload.yesterday.trim(),
-    today: payload.today.trim(),
-    blockers: payload.blockers.trim(),
-    createdAt: existing?.createdAt ?? new Date().toISOString(),
-    linkedIssueKeys: [...new Set(linkedIssueKeys)],
-    contextIssueKey,
-    blockerResolved: existing?.blockerResolved ?? false,
-  };
-
-  const saved = await saveStandupEntry(entry);
   timer.end({ action: 'submitIssueStandup', projectKey, contextIssueKey });
-  return { success: true, entry: saved };
+  return result;
 };
 
 export const enrichLinkedIssues = async ({ payload }) => {
@@ -98,4 +95,24 @@ export const enrichLinkedIssues = async ({ payload }) => {
   const keys = Array.isArray(issueKeys) ? issueKeys : [];
   const issues = await fetchIssuesByKeys(keys);
   return { issues };
+};
+
+export const updateIssueStatus = async ({ payload }) => {
+  const { issueKey, statusCategory } = payload ?? {};
+
+  if (!issueKey || typeof issueKey !== 'string') {
+    throw new Error('issueKey is required.');
+  }
+
+  if (!statusCategory || !['new', 'indeterminate', 'done'].includes(statusCategory)) {
+    throw new Error('Valid statusCategory is required (new, indeterminate, done).');
+  }
+
+  const result = await transitionIssueStatus(issueKey, statusCategory);
+
+  if (!result.success) {
+    throw new Error(result.error ?? 'Không thể cập nhật status.');
+  }
+
+  return { success: true, statusName: result.transitionName };
 };

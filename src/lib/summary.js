@@ -1,6 +1,10 @@
-/** Pure helpers for weekly standup summary — unit-testable without Forge. */
+/** Pure helpers for sprint standup summary — unit-testable without Forge. */
 
 import { STANDUP_LABELS_SHORT } from './labels.js';
+import { extractPlainText } from './adf-helpers.js';
+
+export const SPRINT_SUMMARY_WEEKS = 2;
+export const SPRINT_SUMMARY_DAYS = SPRINT_SUMMARY_WEEKS * 7;
 
 export const addDays = (dateStr, days) => {
   const d = new Date(`${dateStr}T12:00:00.000Z`);
@@ -8,13 +12,16 @@ export const addDays = (dateStr, days) => {
   return d.toISOString().slice(0, 10);
 };
 
-export const getWeekDateRange = (weekStartDate) => {
+export const getSprintDateRange = (sprintStartDate, days = SPRINT_SUMMARY_DAYS) => {
   const dates = [];
-  for (let i = 0; i < 7; i += 1) {
-    dates.push(addDays(weekStartDate, i));
+  for (let i = 0; i < days; i += 1) {
+    dates.push(addDays(sprintStartDate, i));
   }
   return dates;
 };
+
+/** @deprecated Dùng getSprintDateRange */
+export const getWeekDateRange = (weekStartDate) => getSprintDateRange(weekStartDate, 7);
 
 export const getDefaultWeekStart = (referenceDate = new Date()) => {
   const d = new Date(
@@ -26,23 +33,31 @@ export const getDefaultWeekStart = (referenceDate = new Date()) => {
   return d.toISOString().slice(0, 10);
 };
 
+export const getSprintEndDate = (sprintStartDate, days = SPRINT_SUMMARY_DAYS) =>
+  addDays(sprintStartDate, days - 1);
+
 /**
  * @param {Array<{ date: string, displayName: string, yesterday: string, today: string, blockers: string }>} entries
- * @param {string} weekStartDate YYYY-MM-DD (Monday)
+ * @param {string} sprintStartDate YYYY-MM-DD
  */
-export const buildWeeklySummary = (entries, weekStartDate) => {
-  const weekDates = getWeekDateRange(weekStartDate);
+export const buildSprintSummary = (entries, sprintStartDate) => {
+  const sprintDates = getSprintDateRange(sprintStartDate);
+  const sprintEndDate = getSprintEndDate(sprintStartDate);
   const byDate = new Map();
 
   for (const entry of entries) {
-    if (!weekDates.includes(entry.date)) continue;
+    if (!sprintDates.includes(entry.date)) continue;
     if (!byDate.has(entry.date)) byDate.set(entry.date, []);
     byDate.get(entry.date).push(entry);
   }
 
-  const lines = [`# Tổng kết Team Sync tuần`, `Tuần bắt đầu ${weekStartDate}`, ''];
+  const lines = [
+    `# Tổng kết Team Sync sprint (${SPRINT_SUMMARY_WEEKS} tuần)`,
+    `Sprint bắt đầu ${sprintStartDate} · kết thúc ${sprintEndDate}`,
+    '',
+  ];
 
-  for (const date of weekDates) {
+  for (const date of sprintDates) {
     const dayEntries = byDate.get(date) ?? [];
     lines.push(`## ${date}`);
     if (dayEntries.length === 0) {
@@ -52,9 +67,9 @@ export const buildWeeklySummary = (entries, weekStartDate) => {
     }
     for (const e of dayEntries) {
       lines.push(`### ${e.displayName || 'Team member'}`);
-      lines.push(`- **${STANDUP_LABELS_SHORT.tasks}** ${e.yesterday}`);
-      lines.push(`- **${STANDUP_LABELS_SHORT.progress}** ${e.today}`);
-      lines.push(`- **${STANDUP_LABELS_SHORT.problems}** ${e.blockers}`);
+      lines.push(`- **${STANDUP_LABELS_SHORT.tasks}** ${extractPlainText(e.yesterday)}`);
+      lines.push(`- **${STANDUP_LABELS_SHORT.progress}** ${extractPlainText(e.today)}`);
+      lines.push(`- **${STANDUP_LABELS_SHORT.problems}** ${extractPlainText(e.blockers)}`);
       lines.push('');
     }
   }
@@ -62,16 +77,16 @@ export const buildWeeklySummary = (entries, weekStartDate) => {
   const totalEntries = [...byDate.values()].reduce((sum, arr) => sum + arr.length, 0);
   const blockerCount = entries.filter(
     (e) =>
-      weekDates.includes(e.date) &&
-      e.blockers &&
-      !['none', 'không có', 'khong co'].includes(e.blockers.trim().toLowerCase())
+      sprintDates.includes(e.date) &&
+      extractPlainText(e.blockers) &&
+      !['none', 'không có', 'khong co'].includes(extractPlainText(e.blockers).toLowerCase())
   ).length;
 
   lines.push('---');
   lines.push(`**Tổng bản ghi:** ${totalEntries}`);
   lines.push(`**Có vấn đề:** ${blockerCount}`);
 
-  const days = weekDates.map((date) => ({
+  const days = sprintDates.map((date) => ({
     date,
     entries: (byDate.get(date) ?? []).map((e) => ({
       accountId: e.accountId,
@@ -84,13 +99,21 @@ export const buildWeeklySummary = (entries, weekStartDate) => {
 
   return {
     text: lines.join('\n'),
-    weekStartDate,
-    weekDates,
+    sprintStartDate,
+    sprintEndDate,
+    sprintDates,
+    periodDays: SPRINT_SUMMARY_DAYS,
+    periodWeeks: SPRINT_SUMMARY_WEEKS,
+    weekStartDate: sprintStartDate,
+    weekDates: sprintDates,
     days,
     totalEntries,
     blockerCount,
   };
 };
+
+/** @deprecated Dùng buildSprintSummary */
+export const buildWeeklySummary = buildSprintSummary;
 
 export const filterEntriesByDateRange = (entries, fromDate, toDate) =>
   entries.filter((e) => {

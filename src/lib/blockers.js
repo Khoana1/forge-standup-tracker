@@ -1,9 +1,14 @@
+import { extractPlainText } from './adf-helpers.js';
+
 const NONE_PATTERNS = ['none', 'không có', 'khong co', 'n/a', 'na', 'không', 'khong', 'no'];
 
 export const hasActiveBlocker = (blockers, blockerResolved = false) => {
   if (blockerResolved) return false;
-  if (!blockers || typeof blockers !== 'string') return false;
-  const trimmed = blockers.trim().toLowerCase();
+  return hadBlockerContent(blockers);
+};
+
+export const hadBlockerContent = (blockers) => {
+  const trimmed = extractPlainText(blockers).toLowerCase();
   if (!trimmed.length) return false;
   return !NONE_PATTERNS.some((p) => trimmed === p || trimmed.startsWith(`${p} `));
 };

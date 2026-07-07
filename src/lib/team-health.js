@@ -21,13 +21,44 @@ export const deriveTeamMembers = (entries, lookbackDays = 14, referenceDate = ne
   );
 };
 
+/** Enrich Jira project members with standup display names — never add users outside project roles. */
+export const mergeTeamMembers = (
+  projectMembers,
+  entries,
+  lookbackDays = 14,
+  referenceDate = new Date()
+) => {
+  const entryMembers = deriveTeamMembers(entries, lookbackDays, referenceDate);
+  const entryNameByAccountId = new Map(
+    entryMembers.map((member) => [member.accountId, member.displayName])
+  );
+
+  return (projectMembers ?? [])
+    .filter((member) => member?.accountId)
+    .map((member) => {
+      const entryName = entryNameByAccountId.get(member.accountId);
+      const displayName =
+        entryName && entryName !== 'Team member'
+          ? entryName
+          : member.displayName ?? 'Team member';
+      return { accountId: member.accountId, displayName };
+    })
+    .sort((a, b) => (a.displayName ?? '').localeCompare(b.displayName ?? ''));
+};
+
+export const filterEntriesToMembers = (entries, members) => {
+  const allowed = new Set((members ?? []).map((member) => member.accountId).filter(Boolean));
+  if (!allowed.size) return entries;
+  return entries.filter((entry) => allowed.has(entry.accountId));
+};
+
 export const computeSprintCompletionRate = (entries, members, referenceDate = new Date()) => {
   const today = referenceDate.toISOString().slice(0, 10);
   const memberCount = Math.max(members.length, 1);
   let expectedLogs = 0;
   let actualLogs = 0;
 
-  for (let i = 0; i < 7; i += 1) {
+  for (let i = 0; i < 14; i += 1) {
     const date = addDays(today, -i);
     const day = new Date(`${date}T12:00:00.000Z`).getUTCDay();
     if (day === 0 || day === 6) continue;

@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import ForgeReconciler, {
-  Box,
-  Button,
   Form,
   FormFooter,
   Heading,
@@ -12,11 +10,10 @@ import ForgeReconciler, {
   Spinner,
   Stack,
   Text,
-  Textfield,
   useForm,
   useProductContext,
 } from '@forge/react';
-import { invoke, router } from '@forge/bridge';
+import { invoke } from '@forge/bridge';
 import { todayIso, isoToDisplay } from '../../lib/dates.js';
 import {
   STANDUP_HINTS,
@@ -25,47 +22,52 @@ import {
   UI_COPY,
   formatTeamSyncTitle,
 } from '../../lib/labels.js';
+import { extractPlainText, serializeStandupText } from '../../lib/adf-helpers.js';
+import { useStandupForm } from '../hooks/useStandupForm.js';
 import {
   PageHeader,
   StandupField,
+  StandupLinkedIssuesEditor,
   StandupTimelineCard,
-  SurfaceCard,
 } from '../components/ui.jsx';
 
-const IssueChip = ({ issue, onRemove }) => (
-  <SurfaceCard padding="space.100">
-    <Inline space="space.100" alignBlock="center">
-      <Button appearance="link" spacing="none" onClick={() => router.open(`/browse/${issue.key}`)}>
-        {issue.key}
-      </Button>
-      <Text size="small">{issue.summary || '—'}</Text>
-      {issue.status ? <Lozenge>{issue.status}</Lozenge> : null}
-      {onRemove ? (
-        <Button appearance="subtle" spacing="none" onClick={() => onRemove(issue.key)}>
-          Gỡ
-        </Button>
-      ) : null}
-    </Inline>
-  </SurfaceCard>
-);
+const hasRealBlocker = (text) => {
+  const lower = extractPlainText(text).toLowerCase();
+  return lower.length > 0 && !['none', 'không có', 'khong co', 'n/a'].includes(lower);
+};
 
 const IssueStandupPanel = () => {
   const context = useProductContext();
   const issueKey = context?.extension?.issue?.key;
   const projectKey = context?.extension?.project?.key;
 
-  const { handleSubmit, register, getFieldId, setValue, formState } = useForm({
-    defaultValues: { blockers: STANDUP_PLACEHOLDER.problems },
+  const { handleSubmit, register, setValue } = useForm({
+    defaultValues: {
+      yesterday: '',
+      today: '',
+      blockers: STANDUP_PLACEHOLDER.problems,
+    },
+  });
+  const {
+    addLinkedIssues,
+    bindField,
+    canSubmit,
+    linkedIssueKeys,
+    linkedIssues,
+    loadEntry,
+    removeLinkedIssue,
+    reorderLinkedIssues,
+    updateIssueStatus,
+  } = useStandupForm({
+    register,
+    setValue,
+    defaultBlockers: STANDUP_PLACEHOLDER.problems,
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [history, setHistory] = useState([]);
-  const [linkedIssues, setLinkedIssues] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [searching, setSearching] = useState(false);
   const [loggedToday, setLoggedToday] = useState(false);
   const [todayEntry, setTodayEntry] = useState(null);
   const [sprintName, setSprintName] = useState(null);
@@ -93,19 +95,15 @@ const IssueStandupPanel = () => {
       setTodayEntry(entry);
       setLoggedToday(Boolean(entry));
       if (entry) {
-        setValue('yesterday', entry.yesterday);
-        setValue('today', entry.today);
-        setValue('blockers', entry.blockers);
-        const keys = entry.linkedIssueKeys ?? [];
-        if (keys.length) {
-          const enriched = await invoke('enrichLinkedIssues', { issueKeys: keys });
-          setLinkedIssues(
-            enriched?.issues ?? keys.map((k) => ({ key: k, summary: '', status: '' }))
-          );
-        }
+        await loadEntry(entry);
       } else {
-        setLinkedIssues([
-          { key: issueKey, summary: context?.extension?.issue?.summary ?? '', status: '' },
+        await addLinkedIssues([
+          {
+            key: issueKey,
+            url: '',
+            summary: context?.extension?.issue?.summary ?? '',
+            status: '',
+          },
         ]);
       }
     } catch (e) {
@@ -113,54 +111,33 @@ const IssueStandupPanel = () => {
     } finally {
       setLoading(false);
     }
-  }, [projectKey, issueKey, setValue, context?.extension?.issue?.summary]);
+  }, [projectKey, issueKey, loadEntry, addLinkedIssues, context?.extension?.issue?.summary]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const searchIssues = async () => {
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    try {
-      const result = await invoke('searchIssuesForLink', {
-        projectKey,
-        query: searchQuery.trim(),
-      });
-      setSuggestions(result?.issues ?? []);
-    } catch {
-      setSuggestions([]);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const addIssue = (issue) => {
-    if (linkedIssues.some((i) => i.key === issue.key)) return;
-    setLinkedIssues((prev) => [...prev, issue]);
-    setSearchQuery('');
-    setSuggestions([]);
-  };
-
-  const removeIssue = (key) => {
-    setLinkedIssues((prev) => prev.filter((i) => i.key !== key));
-  };
-
-  const onSubmit = async (data) => {
+  const onSubmit = handleSubmit(async (data) => {
     setSubmitting(true);
     setError(null);
     setMessage(null);
     try {
-      await invoke('submitIssueStandup', {
+      const result = await invoke('submitIssueStandup', {
         projectKey,
         contextIssueKey: issueKey,
-        linkedIssueKeys: linkedIssues.map((i) => i.key),
-        yesterday: data.yesterday,
-        today: data.today,
-        blockers: data.blockers,
+        linkedIssueKeys: [...new Set([issueKey, ...linkedIssueKeys])],
+        yesterday: serializeStandupText(data.yesterday),
+        today: serializeStandupText(data.today),
+        blockers: serializeStandupText(data.blockers),
         date: todayIso(),
       });
-      setMessage('Đã lưu Team Sync. Issue này được liên kết tự động.');
+      if (result?.problemNotification?.sent > 0) {
+        setMessage(
+          'Đã lưu Team Sync. Đã gửi email thông báo cho quản trị project. Issue này được liên kết tự động.'
+        );
+      } else {
+        setMessage('Đã lưu Team Sync. Issue này được liên kết tự động.');
+      }
       setLoggedToday(true);
       await load();
     } catch (e) {
@@ -168,7 +145,7 @@ const IssueStandupPanel = () => {
     } finally {
       setSubmitting(false);
     }
-  };
+  });
 
   if (!projectKey || !issueKey) {
     return (
@@ -211,15 +188,14 @@ const IssueStandupPanel = () => {
         </SectionMessage>
       ) : null}
 
-      <Form onSubmit={handleSubmit(onSubmit)}>
+      <Form onSubmit={onSubmit}>
         <Stack space="space.200">
           <StandupField
             step={1}
             label={STANDUP_LABELS_SHORT.tasks}
             hint={STANDUP_HINTS.tasks}
             placeholder={STANDUP_PLACEHOLDER.tasks}
-            fieldId={getFieldId('yesterday')}
-            registerProps={register('yesterday', { required: true })}
+            registerProps={bindField('yesterday')}
             minimumRows={2}
           />
           <StandupField
@@ -227,8 +203,7 @@ const IssueStandupPanel = () => {
             label={STANDUP_LABELS_SHORT.progress}
             hint={STANDUP_HINTS.progress}
             placeholder={STANDUP_PLACEHOLDER.progress}
-            fieldId={getFieldId('today')}
-            registerProps={register('today', { required: true })}
+            registerProps={bindField('today')}
             minimumRows={2}
           />
           <StandupField
@@ -236,54 +211,26 @@ const IssueStandupPanel = () => {
             label={STANDUP_LABELS_SHORT.problems}
             hint={STANDUP_HINTS.problems}
             placeholder={STANDUP_PLACEHOLDER.problems}
-            fieldId={getFieldId('blockers')}
-            registerProps={register('blockers', { required: true })}
+            registerProps={bindField('blockers')}
             minimumRows={2}
           />
 
-          <Box>
-            <Stack space="space.100">
-              <Heading as="h4">Issue liên kết</Heading>
-              <Text size="small" color="color.text.subtle">
-                Thêm issue khác liên quan đến công việc hôm nay của bạn.
-              </Text>
-              <Stack space="space.075">
-                {linkedIssues.map((issue) => (
-                  <IssueChip
-                    key={issue.key}
-                    issue={issue}
-                    onRemove={issue.key !== issueKey ? removeIssue : undefined}
-                  />
-                ))}
-              </Stack>
-              <Inline space="space.100">
-                <Textfield
-                  value={searchQuery}
-                  onChange={(value) => setSearchQuery(value)}
-                  placeholder="Nhập mã issue hoặc từ khóa tiêu đề…"
-                />
-                <Button appearance="default" onClick={searchIssues} isDisabled={searching}>
-                  {searching ? '…' : 'Tìm'}
-                </Button>
-              </Inline>
-              {suggestions.length ? (
-                <Stack space="space.050">
-                  {suggestions.map((issue) => (
-                    <Button key={issue.key} appearance="subtle" onClick={() => addIssue(issue)}>
-                      {issue.key} — {issue.summary}
-                    </Button>
-                  ))}
-                </Stack>
-              ) : null}
-            </Stack>
-          </Box>
+          <StandupLinkedIssuesEditor
+            projectKey={projectKey}
+            issues={linkedIssues}
+            lockedKeys={[issueKey]}
+            onAddIssues={addLinkedIssues}
+            onRemoveIssue={removeLinkedIssue}
+            onReorderIssues={reorderLinkedIssues}
+            onStatusChange={updateIssueStatus}
+          />
 
           <FormFooter align="start">
             <LoadingButton
               type="submit"
               appearance="primary"
               isLoading={submitting}
-              isDisabled={!formState.isValid}
+              isDisabled={!canSubmit}
             >
               {loggedToday ? 'Cập nhật Team Sync' : 'Gửi Team Sync hôm nay'}
             </LoadingButton>
@@ -295,9 +242,7 @@ const IssueStandupPanel = () => {
         <Stack space="space.150">
           <Heading as="h4">Team Sync trước đó (issue này)</Heading>
           {history.map((entry) => {
-            const hasBlocker =
-              entry.blockers &&
-              !['none', 'không có', 'khong co'].includes(entry.blockers.trim().toLowerCase());
+            const hasBlocker = hasRealBlocker(entry.blockers);
             return (
               <StandupTimelineCard
                 key={`${entry.date}-${entry.accountId}`}

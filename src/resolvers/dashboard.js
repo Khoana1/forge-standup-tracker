@@ -1,6 +1,7 @@
 import { listActiveBlockers, summarizeBlockers } from '../lib/blocker-analytics.js';
 import { hasActiveBlocker } from '../lib/blockers.js';
 import { fetchActiveSprint } from '../lib/jira-sprint.js';
+import { fetchProjectRoleMembers, fetchUserAvatars } from '../lib/jira-users.js';
 import { createLogger } from '../lib/logger.js';
 import { assertProjectAdmin, getMyProjectPermissions, userHasGlobalPermission } from '../lib/permissions.js';
 import { getGlobalSettings } from '../lib/settings.js';
@@ -9,6 +10,8 @@ import { queryProjectEntries, updateBlockerResolved } from '../lib/standup-store
 import {
   computeSprintCompletionRate,
   deriveTeamMembers,
+  filterEntriesToMembers,
+  mergeTeamMembers,
 } from '../lib/team-health.js';
 import { validateHistoryPayload, validateResolveBlockerPayload } from '../lib/validators.js';
 import { assertProjectAllowed } from './standup.js';
@@ -32,30 +35,46 @@ export const getProjectDashboard = async ({ payload, context }) => {
   const toDate = payload.toDate ?? today;
   const memberFilter = payload.memberAccountId ?? null;
 
-  const [entries, settings, permissions, isJiraAdmin, activeSprint] = await Promise.all([
-    queryProjectEntries(projectKey, fromDate, toDate),
-    getGlobalSettings(),
-    getMyProjectPermissions(projectKey),
-    userHasGlobalPermission('ADMINISTER'),
-    fetchActiveSprint(projectKey),
-  ]);
+  const accountId = context?.accountId ?? null;
 
-  const members = deriveTeamMembers(entries);
-  const todayEntries = entries.filter((e) => e.date === today);
+  const [entries, settings, permissions, isJiraAdmin, activeSprint, projectRoleMembers] =
+    await Promise.all([
+      queryProjectEntries(projectKey, fromDate, toDate),
+      getGlobalSettings(),
+      getMyProjectPermissions(projectKey, accountId),
+      userHasGlobalPermission('ADMINISTER'),
+      fetchActiveSprint(projectKey),
+      fetchProjectRoleMembers(projectKey),
+    ]);
+
+  const members =
+    projectRoleMembers !== null
+      ? mergeTeamMembers(projectRoleMembers, entries)
+      : deriveTeamMembers(entries);
+
+  const scopedEntries =
+    projectRoleMembers !== null ? filterEntriesToMembers(entries, members) : entries;
+  const todayEntries = scopedEntries.filter((e) => e.date === today);
   const filteredToday = memberFilter
     ? todayEntries.filter((e) => e.accountId === memberFilter)
     : todayEntries;
 
   const staleThreshold = settings.blockerAlertDays ?? 1;
-  const activeBlockers = listActiveBlockers(entries, { today, staleThreshold });
+  const activeBlockers = listActiveBlockers(scopedEntries, { today, staleThreshold });
   const blockerSummary = summarizeBlockers(activeBlockers);
 
-  const sprintCompletion = computeSprintCompletionRate(entries, members);
+  const sprintCompletion = computeSprintCompletionRate(scopedEntries, members);
 
   const memberCards = members.map((m) => {
     const logged = todayEntries.some((e) => e.accountId === m.accountId);
     return { ...m, loggedToday: logged };
   });
+
+  const avatarAccountIds = [
+    ...members.map((m) => m.accountId),
+    ...filteredToday.map((e) => e.accountId),
+  ];
+  const avatars = await fetchUserAvatars(avatarAccountIds);
 
   const timeline = filteredToday
     .sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
@@ -67,7 +86,11 @@ export const getProjectDashboard = async ({ payload, context }) => {
       today: e.today,
       blockers: e.blockers,
       hasBlocker: hasActiveBlocker(e.blockers, e.blockerResolved),
+      blockerResolved: Boolean(e.blockerResolved),
+      blockerResolution: e.blockerResolution ?? null,
+      blockerResolvedAt: e.blockerResolvedAt ?? null,
       linkedIssueKeys: e.linkedIssueKeys ?? [],
+      blockerIssueKey: e.blockerIssueKey ?? null,
     }));
 
   timer.end({ action: 'getProjectDashboard', projectKey });
@@ -79,15 +102,16 @@ export const getProjectDashboard = async ({ payload, context }) => {
     stats: {
       completionToday: {
         logged: todayEntries.length,
-        total: Math.max(members.length, todayEntries.length),
+        total: members.length,
         pending: Math.max(0, members.length - todayEntries.length),
       },
       sprintCompletion: sprintCompletion.rate,
       activeBlockers: blockerSummary.total,
       staleBlockers: blockerSummary.stale,
     },
-    members: memberCards,
+    members: memberCards.map((m) => ({ ...m, avatarUrl: avatars[m.accountId] ?? '' })),
     timeline,
+    avatars,
     activeBlockers,
     blockerSummary,
     settings: {
@@ -105,7 +129,7 @@ export const resolveBlocker = async ({ payload, context }) => {
 
   const { projectKey, date, accountId, resolutionPlan } = payload;
   await assertProjectAllowed(projectKey);
-  await assertProjectAdmin(projectKey);
+  await assertProjectAdmin(projectKey, context?.accountId);
 
   const updated = await updateBlockerResolved(projectKey, date, accountId, {
     resolved: true,
@@ -116,4 +140,10 @@ export const resolveBlocker = async ({ payload, context }) => {
 
   timer.end({ action: 'resolveBlocker', projectKey, date, accountId });
   return { success: true, entry: updated };
+};
+
+export const getUserAvatars = async ({ payload }) => {
+  const accountIds = payload?.accountIds ?? [];
+  const avatars = await fetchUserAvatars(accountIds);
+  return { avatars };
 };

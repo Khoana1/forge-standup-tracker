@@ -55,9 +55,10 @@ const TeamConfigPage = () => {
   return (
     <Form onSubmit={handleSubmit(onSubmit)}>
       <Stack space="space.250">
-        <Heading as="h2">Team configuration</Heading>
+        <Heading as="h2">Cấu hình team</Heading>
         <Text color="color.text.subtle">
-          Restrict standup tracking to specific projects. Leave empty to allow all projects.
+          Giới hạn các project được theo dõi Team Sync. Để trống để cho phép mọi project. Project admin
+          có thể mở trang này từ Project settings → Apps; Jira admin mở từ Jira settings → Apps.
         </Text>
         {error ? <SectionMessage appearance="error">{error}</SectionMessage> : null}
         {success ? (

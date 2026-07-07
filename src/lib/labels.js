@@ -14,10 +14,15 @@ export const STANDUP_LABELS_SHORT = {
 };
 
 export const STANDUP_HINTS = {
-  tasks: 'Liệt kê ticket, task hoặc mục tiêu bạn tập trung hôm nay (mỗi dòng một mục).',
-  progress: 'Mô tả tiến độ: DONE, đang làm, % hoàn thành, hoặc kết quả cụ thể.',
-  problems: 'Ghi rõ vấn đề cần hỗ trợ. Nếu không có, gõ «Không có».',
+  tasks: 'Ghi rõ các task làm trong ngày',
+  progress: 'Tiến độ công việc (Nhanh, chậm, đúng tiến độ)',
+  problems: 'Ghi rõ các impediment cản trở công việc. Nếu không có, gõ «Không có».',
 };
+
+export const STANDUP_LINKED_WORK_ITEMS_TITLE = 'Work item làm việc hôm nay';
+
+export const STANDUP_LINKED_ISSUES_HINT =
+  'Gom mọi work item bạn làm hôm nay tại đây — dán nhiều link (mỗi dòng), mã work item (SCRUM-1), hoặc tìm theo tiêu đề.';
 
 /** Tiêu đề cột bảng (rút gọn để vừa layout). */
 export const STANDUP_TABLE_HEADERS = {
@@ -27,8 +32,8 @@ export const STANDUP_TABLE_HEADERS = {
 };
 
 export const STANDUP_PLACEHOLDER = {
-  tasks: 'Ví dụ: MOBIX-13031 — Xử lý rule điều hướng màn nhập thông tin…',
-  progress: 'Ví dụ: DONE · Đang review · 80% hoàn thành…',
+  tasks: 'Ghi rõ các task làm trong ngày',
+  progress: 'Tiến độ công việc (Nhanh, chậm, đúng tiến độ)',
   problems: 'Không có',
 };
 

@@ -31,16 +31,20 @@ wrap('getAppStatus', standup.getAppStatus);
 
 wrap('getProjectDashboard', dashboard.getProjectDashboard);
 wrap('resolveBlocker', dashboard.resolveBlocker);
+wrap('getUserAvatars', dashboard.getUserAvatars);
 
 wrap('searchIssuesForLink', issuePanel.searchIssuesForLink);
 wrap('getIssueStandupHistory', issuePanel.getIssueStandupHistory);
 wrap('submitIssueStandup', issuePanel.submitIssueStandup);
 wrap('enrichLinkedIssues', issuePanel.enrichLinkedIssues);
+wrap('updateIssueStatus', issuePanel.updateIssueStatus);
 
 wrap('getSettings', admin.getSettings);
 wrap('saveSettings', admin.saveSettings);
 wrap('getTeamConfiguration', admin.getTeamConfiguration);
 wrap('saveTeamConfiguration', admin.saveTeamConfiguration);
+wrap('getStandupDataMembers', admin.getStandupDataMembers);
+wrap('purgeMemberStandupData', admin.purgeMemberStandupData);
 wrap('exportStandupData', admin.exportStandupData);
 wrap('purgeStandupData', admin.purgeStandupData);
 

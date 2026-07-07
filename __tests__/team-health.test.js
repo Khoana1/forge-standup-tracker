@@ -1,10 +1,16 @@
-import { hasActiveBlocker, classifyBlockerType } from '../src/lib/blockers.js';
+import { hasActiveBlocker, classifyBlockerType, hadBlockerContent } from '../src/lib/blockers.js';
 import {
   buildBlockerAnalytics,
   summarizeBlockers,
   mapActiveBlocker,
 } from '../src/lib/blocker-analytics.js';
-import { deriveTeamMembers, computeSprintCompletionRate } from '../src/lib/team-health.js';
+import {
+  deriveTeamMembers,
+  mergeTeamMembers,
+  filterEntriesToMembers,
+  computeSprintCompletionRate,
+} from '../src/lib/team-health.js';
+import { isAllowedProjectRoleName } from '../src/lib/jira-users.js';
 
 describe('hasActiveBlocker', () => {
   it('treats none-like values as inactive', () => {
@@ -18,6 +24,11 @@ describe('hasActiveBlocker', () => {
 
   it('respects resolved flag', () => {
     expect(hasActiveBlocker('Redis down', true)).toBe(false);
+  });
+
+  it('hadBlockerContent detects real blockers', () => {
+    expect(hadBlockerContent('Chán')).toBe(true);
+    expect(hadBlockerContent('Không có')).toBe(false);
   });
 });
 
@@ -33,6 +44,60 @@ describe('deriveTeamMembers', () => {
       new Date('2026-05-29T12:00:00.000Z')
     );
     expect(members).toHaveLength(2);
+  });
+});
+
+describe('mergeTeamMembers', () => {
+  it('includes all Jira project members even without standup entries', () => {
+    const members = mergeTeamMembers(
+      [
+        { accountId: '1', displayName: 'Alice' },
+        { accountId: '2', displayName: 'Bob' },
+        { accountId: '3', displayName: 'Carol' },
+      ],
+      [{ accountId: '1', displayName: 'Alice', date: '2026-05-28' }],
+      14,
+      new Date('2026-05-29T12:00:00.000Z')
+    );
+    expect(members).toHaveLength(3);
+    expect(members.map((m) => m.accountId)).toEqual(['1', '2', '3']);
+  });
+
+  it('excludes standup-only users who are not in project roles', () => {
+    const members = mergeTeamMembers(
+      [{ accountId: '1', displayName: 'Alice' }],
+      [
+        { accountId: '1', displayName: 'Alice', date: '2026-05-28' },
+        { accountId: '9', displayName: 'Former', date: '2026-05-28' },
+      ],
+      14,
+      new Date('2026-05-29T12:00:00.000Z')
+    );
+    expect(members).toHaveLength(1);
+    expect(members[0].accountId).toBe('1');
+  });
+});
+
+describe('filterEntriesToMembers', () => {
+  it('drops entries from users outside the allowed member list', () => {
+    const filtered = filterEntriesToMembers(
+      [
+        { accountId: '1', date: '2026-05-28' },
+        { accountId: '9', date: '2026-05-28' },
+      ],
+      [{ accountId: '1', displayName: 'Alice' }]
+    );
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].accountId).toBe('1');
+  });
+});
+
+describe('isAllowedProjectRoleName', () => {
+  it('allows member and administrator roles only', () => {
+    expect(isAllowedProjectRoleName('Member')).toBe(true);
+    expect(isAllowedProjectRoleName('Administrators')).toBe(true);
+    expect(isAllowedProjectRoleName('atlassian-addons-project-access')).toBe(false);
+    expect(isAllowedProjectRoleName('Viewers')).toBe(false);
   });
 });
 

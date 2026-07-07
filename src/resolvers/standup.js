@@ -1,19 +1,20 @@
 import { fetchActiveSprint } from '../lib/jira-sprint.js';
 import { createLogger } from '../lib/logger.js';
-import { fetchMyDisplayName, validateProjectExists } from '../lib/jira-users.js';
+import { validateProjectExists } from '../lib/jira-users.js';
 import {
   getGlobalSettings,
   getTeamConfig,
 } from '../lib/settings.js';
+import { persistStandupSubmission } from '../lib/standup-submit.js';
 import {
-  buildWeeklySummary,
+  buildSprintSummary,
   getDefaultWeekStart,
+  getSprintEndDate,
   isProjectEnabled,
 } from '../lib/summary.js';
 import {
   getStandupEntry,
   queryProjectEntries,
-  saveStandupEntry,
 } from '../lib/standup-store.js';
 import {
   validateHistoryPayload,
@@ -55,24 +56,9 @@ export const submitStandup = async ({ payload, context }) => {
   const exists = await validateProjectExists(projectKey);
   if (!exists) throw new Error(`Project ${projectKey} was not found.`);
 
-  const displayName = await fetchMyDisplayName();
-  const entry = {
-    accountId,
-    displayName,
-    projectKey,
-    date,
-    yesterday: payload.yesterday.trim(),
-    today: payload.today.trim(),
-    blockers: payload.blockers.trim(),
-    createdAt: new Date().toISOString(),
-    linkedIssueKeys: payload.linkedIssueKeys ?? [],
-    contextIssueKey: payload.contextIssueKey ?? null,
-    blockerResolved: false,
-  };
-
-  const saved = await saveStandupEntry(entry);
+  const result = await persistStandupSubmission({ payload, context, validation });
   timer.end({ action: 'submitStandup', projectKey, date, accountId });
-  return { success: true, entry: saved };
+  return result;
 };
 
 export const getMyStandupToday = async ({ payload, context }) => {
@@ -114,18 +100,19 @@ export const getWeeklySummary = async ({ payload }) => {
   if (!validation.valid) throw new Error(validation.errors[0].message);
 
   const { projectKey } = payload;
-  const weekStartDate = payload.weekStartDate ?? getDefaultWeekStart();
-
   await assertProjectAllowed(projectKey);
 
-  const weekEnd = new Date(`${weekStartDate}T12:00:00.000Z`);
-  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
-  const toDate = weekEnd.toISOString().slice(0, 10);
+  const sprintStartDate =
+    payload.sprintStartDate ??
+    payload.weekStartDate ??
+    (await fetchActiveSprint(projectKey))?.startDate?.slice(0, 10) ??
+    getDefaultWeekStart();
+  const toDate = getSprintEndDate(sprintStartDate);
 
-  const entries = await queryProjectEntries(projectKey, weekStartDate, toDate);
-  const summary = buildWeeklySummary(entries, weekStartDate);
+  const entries = await queryProjectEntries(projectKey, sprintStartDate, toDate);
+  const summary = buildSprintSummary(entries, sprintStartDate);
 
-  timer.end({ action: 'getWeeklySummary', projectKey, weekStartDate });
+  timer.end({ action: 'getWeeklySummary', projectKey, sprintStartDate });
   return summary;
 };
 

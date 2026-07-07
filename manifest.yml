@@ -1,11 +1,9 @@
 modules:
   jira:projectPage:
     - key: standup-tracker-project-page
-      resource: main
+      resource: project-app
       resolver:
         function: resolver
-      render: native
-      layout: native
       title: Team Sync
       pages:
         - title: Tổng quan team
@@ -14,8 +12,15 @@ modules:
           route: log
         - title: Lịch sử team
           route: history
-        - title: Tổng kết tuần
+        - title: Tổng kết sprint
           route: summary
+  jira:projectSettingsPage:
+    - key: standup-project-team-config
+      resource: admin-team
+      resolver:
+        function: resolver
+      render: native
+      title: Team Sync
   jira:issuePanel:
     - key: standup-issue-panel
       resource: issue-panel
@@ -56,8 +61,8 @@ modules:
       handler: purge-retention.run
       timeoutSeconds: 120
 resources:
-  - key: main
-    path: src/frontend/project/index.jsx
+  - key: project-app
+    path: static/project-app
   - key: issue-panel
     path: src/frontend/issue/index.jsx
   - key: admin-settings
@@ -66,12 +71,20 @@ resources:
     path: src/frontend/admin/team.jsx
   - key: admin-data
     path: src/frontend/admin/data.jsx
+  - key: issue-hub-ui
+    path: static/issue-hub
+  - key: daily-report-table-ui
+    path: static/daily-report-table
+  - key: dashboard-timeline-ui
+    path: static/dashboard-timeline
 permissions:
   scopes:
     - storage:app
     - read:jira-user
     - read:jira-work
+    - write:jira-work
     - read:project:jira
+    - manage:jira-project
     - read:board-scope:jira-software
     - read:sprint:jira-software
 app:

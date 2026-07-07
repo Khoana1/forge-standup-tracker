@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS = {
   skipWeekends: true,
   weeklySummaryAuto: false,
   blockerAlertDays: 1,
+  notifyProjectAdminsOnProblem: true,
 };
 
 export const DEFAULT_TEAM_CONFIG = {
@@ -41,6 +42,12 @@ const mergeSettings = (stored) => ({
     stored.blockerAlertDays <= 14
       ? stored.blockerAlertDays
       : DEFAULT_SETTINGS.blockerAlertDays,
+  notifyProjectAdminsOnProblem:
+    typeof stored?.notifyProjectAdminsOnProblem === 'boolean'
+      ? stored.notifyProjectAdminsOnProblem
+      : typeof stored?.autoCreateProblemTasks === 'boolean'
+        ? stored.autoCreateProblemTasks
+        : DEFAULT_SETTINGS.notifyProjectAdminsOnProblem,
 });
 
 export const getGlobalSettings = async () => {

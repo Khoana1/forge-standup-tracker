@@ -1,4 +1,5 @@
 import { isValidDateKey, isValidProjectKey } from './keys.js';
+import { extractPlainText } from './adf-helpers.js';
 
 const MAX_FIELD_LENGTH = 5000;
 
@@ -8,10 +9,10 @@ export const validateStandupText = (value, fieldName) => {
   if (value === undefined || value === null) {
     return fieldError(fieldName, `${fieldName} is required`);
   }
-  if (typeof value !== 'string') {
+  if (typeof value !== 'string' && typeof value !== 'object') {
     return fieldError(fieldName, `${fieldName} must be a string`);
   }
-  const trimmed = value.trim();
+  const trimmed = extractPlainText(value);
   if (trimmed.length < 1) {
     return fieldError(fieldName, `${fieldName} cannot be empty`);
   }
@@ -24,7 +25,7 @@ export const validateStandupText = (value, fieldName) => {
 const validateIssueKeyList = (keys, fieldName) => {
   if (keys === undefined || keys === null) return null;
   if (!Array.isArray(keys)) return fieldError(fieldName, `${fieldName} must be an array`);
-  if (keys.length > 10) return fieldError(fieldName, `${fieldName} may contain at most 10 items`);
+  if (keys.length > 20) return fieldError(fieldName, `${fieldName} may contain at most 20 items`);
   for (const key of keys) {
     if (typeof key !== 'string' || !/^[A-Z][A-Z0-9]+-\d+$/.test(key.trim())) {
       return fieldError(fieldName, `Invalid issue key in ${fieldName}`);
@@ -90,13 +91,14 @@ export const validateHistoryPayload = (payload) => {
 
 export const validateWeeklySummaryPayload = (payload) => {
   const errors = [];
-  const { projectKey, weekStartDate } = payload ?? {};
+  const { projectKey, weekStartDate, sprintStartDate } = payload ?? {};
+  const startDate = sprintStartDate ?? weekStartDate;
 
   if (!isValidProjectKey(projectKey)) {
     errors.push(fieldError('projectKey', 'projectKey is required'));
   }
-  if (weekStartDate && !isValidDateKey(weekStartDate)) {
-    errors.push(fieldError('weekStartDate', 'weekStartDate must be YYYY-MM-DD'));
+  if (startDate && !isValidDateKey(startDate)) {
+    errors.push(fieldError('sprintStartDate', 'sprintStartDate must be YYYY-MM-DD'));
   }
 
   return { valid: errors.length === 0, errors };
@@ -112,6 +114,7 @@ export const validateSettingsPayload = (payload) => {
     skipWeekends,
     weeklySummaryAuto,
     blockerAlertDays,
+    notifyProjectAdminsOnProblem,
   } = payload ?? {};
 
   if (typeof enabled !== 'boolean') {
@@ -149,6 +152,15 @@ export const validateSettingsPayload = (payload) => {
     (!Number.isInteger(alertDays) || alertDays < 0 || alertDays > 14)
   ) {
     errors.push(fieldError('blockerAlertDays', 'blockerAlertDays must be 0–14'));
+  }
+
+  if (
+    notifyProjectAdminsOnProblem !== undefined &&
+    typeof notifyProjectAdminsOnProblem !== 'boolean'
+  ) {
+    errors.push(
+      fieldError('notifyProjectAdminsOnProblem', 'notifyProjectAdminsOnProblem must be a boolean')
+    );
   }
 
   return { valid: errors.length === 0, errors };
@@ -228,6 +240,17 @@ export const validatePurgePayload = (payload) => {
     return {
       valid: false,
       errors: [fieldError('confirm', 'Confirmation phrase is required')],
+    };
+  }
+  return { valid: true, errors: [] };
+};
+
+export const validatePurgeMemberPayload = (payload) => {
+  const accountId = String(payload?.accountId ?? '').trim();
+  if (!accountId) {
+    return {
+      valid: false,
+      errors: [fieldError('accountId', 'accountId is required')],
     };
   }
   return { valid: true, errors: [] };

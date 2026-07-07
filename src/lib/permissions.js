@@ -1,6 +1,8 @@
 import api, { route } from '@forge/api';
 import { createLogger } from './logger.js';
 
+import { fetchProjectAdministratorIds } from './jira-users.js';
+
 const logger = createLogger('permissions');
 
 /**
@@ -29,6 +31,16 @@ export const userHasProjectPermission = async (projectKey, permissionKey) => {
   }
 };
 
+export const userIsProjectAdministrator = async (projectKey, accountId) => {
+  if (!projectKey) return false;
+  if (await userHasProjectPermission(projectKey, 'ADMINISTER_PROJECTS')) return true;
+  if (!accountId) return false;
+
+  const adminIds = await fetchProjectAdministratorIds(projectKey);
+  if (adminIds === null) return false;
+  return adminIds.includes(accountId);
+};
+
 export const assertJiraAdmin = async () => {
   const allowed = await userHasGlobalPermission('ADMINISTER');
   if (!allowed) {
@@ -54,16 +66,16 @@ export const userHasGlobalPermission = async (permissionKey) => {
   }
 };
 
-export const assertProjectAdmin = async (projectKey) => {
-  const allowed = await userHasProjectPermission(projectKey, 'ADMINISTER_PROJECTS');
+export const assertProjectAdmin = async (projectKey, accountId) => {
+  const allowed = await userIsProjectAdministrator(projectKey, accountId);
   if (!allowed) {
     throw new Error('Bạn không có quyền thực hiện thao tác này trên project.');
   }
 };
 
-export const getMyProjectPermissions = async (projectKey) => {
+export const getMyProjectPermissions = async (projectKey, accountId) => {
   const [canAdministerProject, canBrowseProject] = await Promise.all([
-    userHasProjectPermission(projectKey, 'ADMINISTER_PROJECTS'),
+    userIsProjectAdministrator(projectKey, accountId),
     userHasProjectPermission(projectKey, 'BROWSE_PROJECTS'),
   ]);
   return { canAdministerProject, canBrowseProject };

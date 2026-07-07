@@ -9,12 +9,18 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "build:issue-hub": "esbuild src/frontend/custom-ui/issue-hub/main.js --bundle --outfile=static/issue-hub/app.js --format=esm --platform=browser",
+    "build:daily-report-table": "esbuild src/frontend/custom-ui/daily-report-table/main.js --bundle --outfile=static/daily-report-table/app.js --format=esm --platform=browser",
+    "build:dashboard-timeline": "esbuild src/frontend/custom-ui/dashboard-timeline/main.js --bundle --outfile=static/dashboard-timeline/app.js --format=esm --platform=browser",
+    "build:project-app": "esbuild src/frontend/custom-ui/project-app/main.js --bundle --outfile=static/project-app/app.js --format=esm --platform=browser",
+    "build:custom-ui": "npm run build:issue-hub && npm run build:daily-report-table && npm run build:dashboard-timeline && npm run build:project-app"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",
     "babel-jest": "^29.7.0",
+    "esbuild": "^0.25.12",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "jest": "^29.7.0"

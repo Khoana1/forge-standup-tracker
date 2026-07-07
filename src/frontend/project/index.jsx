@@ -15,16 +15,21 @@ import ForgeReconciler, {
   Text,
   useForm,
   useProductContext,
-} from '@forge/react';echo "# forge-standup-tracker" >> README.md
-import { invoke, view } from '@forge/bridge';
+} from '@forge/react';
+import { invoke, view, events } from '@forge/bridge';
 import DashboardView from './DashboardView.jsx';
+import { StandupTableFrame } from '../components/StandupTableFrame.jsx';
 import {
   EmptyPrompt,
   HistoryEntryCard,
   PageHeader,
-  StandupField,
   SurfaceCard,
 } from '../components/ui.jsx';
+import {
+  extractPlainText,
+  serializeStandupText,
+} from '../../lib/adf-helpers.js';
+import { useStandupForm } from '../hooks/useStandupForm.js';
 import {
   DISPLAY_DATE_FORMAT,
   addDaysIso,
@@ -33,13 +38,18 @@ import {
   todayIso,
 } from '../../lib/dates.js';
 import {
-  STANDUP_HINTS,
-  STANDUP_LABELS_SHORT,
   STANDUP_PLACEHOLDER,
   STANDUP_TABLE_HEADERS,
   UI_COPY,
   formatTeamSyncTitle,
 } from '../../lib/labels.js';
+import {
+  createDefaultRows,
+  createRowId,
+  fieldsToRows,
+  rowsToFields,
+} from '../../lib/standup-rows.js';
+import { isStandupFieldEmpty } from '../../lib/adf-helpers.js';
 
 const VIEW_DASHBOARD = 'dashboard';
 const VIEW_LOG = 'log';
@@ -56,7 +66,7 @@ const routeFromPathname = (pathname = '') => {
 };
 
 const hasRealBlocker = (text) => {
-  const lower = (text ?? '').trim().toLowerCase();
+  const lower = extractPlainText(text).toLowerCase();
   return lower.length > 0 && !['none', 'không có', 'khong co', 'n/a'].includes(lower);
 };
 
@@ -79,50 +89,114 @@ const StandupDatePicker = ({ id, label, value, onChange }) => (
 );
 
 const LogStandupForm = ({ projectKey, sprintName, onSubmitted }) => {
-  const { handleSubmit, register, getFieldId, setValue, formState } = useForm({
-    defaultValues: { blockers: STANDUP_PLACEHOLDER.problems },
+  const { handleSubmit, setValue } = useForm({
+    defaultValues: {
+      yesterday: '',
+      today: '',
+      blockers: STANDUP_PLACEHOLDER.problems,
+    },
+  });
+  const [rows, setRows] = useState(() => createDefaultRows());
+  const {
+    absorbCellPaste,
+    addLinkedIssues,
+    linkedIssueKeys,
+    linkedIssues,
+    loadEntry,
+    removeLinkedIssue,
+    reorderLinkedIssues,
+    updateIssueStatus,
+  } = useStandupForm({
+    register: () => ({}),
+    setValue,
+    defaultBlockers: STANDUP_PLACEHOLDER.problems,
   });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [alreadyLogged, setAlreadyLogged] = useState(false);
 
+  const canSubmit = useMemo(() => {
+    const fields = rowsToFields(rows, STANDUP_PLACEHOLDER.problems);
+    return ['yesterday', 'today', 'blockers'].every(
+      (name) => !isStandupFieldEmpty(fields[name], [])
+    );
+  }, [rows]);
+
+  const handleAddRow = useCallback(() => {
+    setRows((prev) => [
+      ...prev,
+      { id: createRowId(), tasks: '', progress: '', problems: '' },
+    ]);
+  }, []);
+
+  const handleRemoveRow = useCallback((rowId) => {
+    setRows((prev) => (prev.length <= 1 ? prev : prev.filter((row) => row.id !== rowId)));
+  }, []);
+
+  const handleCellBlur = useCallback(
+    (rowId, field, value, done) => {
+      const result = absorbCellPaste(value, (stripped) => {
+        setRows((prev) =>
+          prev.map((row) => (row.id === rowId ? { ...row, [field]: stripped } : row))
+        );
+        done?.();
+      });
+      if (result === value) done?.();
+    },
+    [absorbCellPaste]
+  );
+
   useEffect(() => {
     if (!projectKey) return;
     invoke('getMyStandupToday', { projectKey, date: todayIso() })
-      .then(({ entry }) => {
+      .then(async ({ entry }) => {
         if (entry) {
           setAlreadyLogged(true);
-          setValue('yesterday', entry.yesterday);
-          setValue('today', entry.today);
-          setValue('blockers', entry.blockers);
+          await loadEntry(entry);
+          setRows(
+            fieldsToRows(
+              {
+                yesterday: extractPlainText(entry.yesterday),
+                today: extractPlainText(entry.today),
+                blockers: extractPlainText(entry.blockers),
+              },
+              { defaultRowCount: createDefaultRows().length }
+            )
+          );
           setMessage('Bạn đã ghi Team Sync hôm nay. Gửi lại nếu muốn cập nhật nội dung.');
         }
       })
       .catch(() => {});
-  }, [projectKey, setValue]);
+  }, [projectKey, loadEntry]);
 
-  const onSubmit = async (data) => {
+  const onSubmit = handleSubmit(async () => {
     setSubmitting(true);
     setError(null);
     setMessage(null);
+    const data = rowsToFields(rows, STANDUP_PLACEHOLDER.problems);
     try {
-      await invoke('submitStandup', {
+      const result = await invoke('submitStandup', {
         projectKey,
-        yesterday: data.yesterday,
-        today: data.today,
-        blockers: data.blockers,
+        yesterday: serializeStandupText(data.yesterday),
+        today: serializeStandupText(data.today),
+        blockers: serializeStandupText(data.blockers),
+        linkedIssueKeys,
         date: todayIso(),
       });
       setAlreadyLogged(true);
-      setMessage('Đã lưu Team Sync. Cảm ơn bạn!');
+      if (result?.problemNotification?.sent > 0) {
+        setMessage('Đã lưu Team Sync. Đã gửi email thông báo cho quản trị project.');
+      } else {
+        setMessage('Đã lưu Team Sync. Cảm ơn bạn!');
+      }
       onSubmitted?.();
     } catch (e) {
       setError(e?.message ?? 'Không lưu được Team Sync.');
     } finally {
       setSubmitting(false);
     }
-  };
+  });
 
   return (
     <Stack space="space.250">
@@ -138,41 +212,29 @@ const LogStandupForm = ({ projectKey, sprintName, onSubmitted }) => {
       ) : (
         <SectionMessage appearance="information" title="Bắt đầu nhanh">
           <Text>
-            Mẹo: ghi bullet ngắn, mỗi dòng một mục. Phần Problems gõ «Không có» nếu bạn không gặp
-            trở ngại.
+            Điền bảng Tasks / Progress / Problems — mỗi hàng là một mục công việc. Mặc định 3 hàng;
+            thêm hoặc xóa hàng khi cần. Work item Jira gom ở mục «Work item làm việc hôm nay».
           </Text>
         </SectionMessage>
       )}
 
-      <Form onSubmit={handleSubmit(onSubmit)}>
+      <Form onSubmit={onSubmit}>
         <Stack space="space.200">
           {error ? <SectionMessage appearance="error">{error}</SectionMessage> : null}
           {message ? <SectionMessage appearance="information">{message}</SectionMessage> : null}
 
-          <StandupField
-            step={1}
-            label={STANDUP_LABELS_SHORT.tasks}
-            hint={STANDUP_HINTS.tasks}
-            placeholder={STANDUP_PLACEHOLDER.tasks}
-            fieldId={getFieldId('yesterday')}
-            registerProps={register('yesterday', { required: true })}
-          />
-          <StandupField
-            step={2}
-            label={STANDUP_LABELS_SHORT.progress}
-            hint={STANDUP_HINTS.progress}
-            placeholder={STANDUP_PLACEHOLDER.progress}
-            fieldId={getFieldId('today')}
-            registerProps={register('today', { required: true })}
-          />
-          <StandupField
-            step={3}
-            label={STANDUP_LABELS_SHORT.problems}
-            hint={STANDUP_HINTS.problems}
-            placeholder={STANDUP_PLACEHOLDER.problems}
-            fieldId={getFieldId('blockers')}
-            registerProps={register('blockers', { required: true })}
-            minimumRows={2}
+          <StandupTableFrame
+            rows={rows}
+            onChange={setRows}
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellBlur={handleCellBlur}
+            projectKey={projectKey}
+            issues={linkedIssues}
+            onAddIssues={addLinkedIssues}
+            onRemoveIssue={removeLinkedIssue}
+            onReorderIssues={reorderLinkedIssues}
+            onStatusChange={updateIssueStatus}
           />
 
           <FormFooter align="start">
@@ -180,7 +242,7 @@ const LogStandupForm = ({ projectKey, sprintName, onSubmitted }) => {
               type="submit"
               appearance="primary"
               isLoading={submitting}
-              isDisabled={!formState.isValid}
+              isDisabled={!canSubmit}
             >
               {alreadyLogged ? 'Cập nhật Team Sync' : 'Gửi Team Sync hôm nay'}
             </LoadingButton>
@@ -193,7 +255,7 @@ const LogStandupForm = ({ projectKey, sprintName, onSubmitted }) => {
 
 const TeamHistoryView = ({ projectKey, sprintName }) => {
   const [fromDate, setFromDate] = useState(() => addDaysIso(todayIso(), -14));
-  const [toDate, setToDate] = useState(todayIso);
+  const [toDate, setToDate] = useState(() => todayIso());
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -283,8 +345,8 @@ const TeamHistoryView = ({ projectKey, sprintName }) => {
   );
 };
 
-const WeeklySummaryView = ({ projectKey, sprintName }) => {
-  const [weekStart, setWeekStart] = useState(mondayOfWeekIso);
+const SprintSummaryView = ({ projectKey, sprintName, activeSprintStart }) => {
+  const [sprintStart, setSprintStart] = useState(() => activeSprintStart ?? mondayOfWeekIso());
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -296,18 +358,18 @@ const WeeklySummaryView = ({ projectKey, sprintName }) => {
     try {
       const result = await invoke('getWeeklySummary', {
         projectKey,
-        weekStartDate: weekStart,
+        sprintStartDate: sprintStart,
       });
       setSummary(result);
     } catch (e) {
-      setError(e?.message ?? 'Không tạo được tổng kết tuần.');
+      setError(e?.message ?? 'Không tạo được tổng kết sprint.');
     } finally {
       setLoading(false);
     }
-  }, [projectKey, weekStart]);
+  }, [projectKey, sprintStart]);
 
-  const handleWeekStartChange = (iso) => {
-    setWeekStart(iso);
+  const handleSprintStartChange = (iso) => {
+    setSprintStart(iso);
     setSummary(null);
     setError(null);
   };
@@ -315,17 +377,17 @@ const WeeklySummaryView = ({ projectKey, sprintName }) => {
   return (
     <Stack space="space.250">
       <PageHeader
-        title={`Tổng kết tuần · ${formatTeamSyncTitle(sprintName)}`}
-        subtitle="Chọn thứ Hai bắt đầu tuần, rồi bấm «Xem tổng kết» để xem Team Sync đã lưu."
+        title={`Tổng kết sprint · ${formatTeamSyncTitle(sprintName)}`}
+        subtitle="Tổng hợp Team Sync trong 2 tuần. Chọn ngày bắt đầu sprint, rồi bấm «Xem tổng kết»."
       />
 
       <SurfaceCard>
         <Stack space="space.150">
           <StandupDatePicker
-            id="week-start"
-            label="Tuần bắt đầu (Thứ Hai)"
-            value={weekStart}
-            onChange={handleWeekStartChange}
+            id="sprint-start"
+            label="Ngày bắt đầu sprint"
+            value={sprintStart}
+            onChange={handleSprintStartChange}
           />
           <LoadingButton appearance="primary" onClick={generate} isLoading={loading}>
             Xem tổng kết
@@ -338,7 +400,7 @@ const WeeklySummaryView = ({ projectKey, sprintName }) => {
       {!summary && !loading ? (
         <EmptyPrompt
           header="Chưa có tổng kết"
-          description="Chọn tuần và bấm «Xem tổng kết». Dữ liệu lấy từ các bản ghi Team Sync đã gửi."
+          description="Chọn ngày bắt đầu sprint (2 tuần) và bấm «Xem tổng kết». Dữ liệu lấy từ các bản ghi Team Sync đã gửi."
           actionLabel="Xem tổng kết"
           onAction={generate}
         />
@@ -350,8 +412,9 @@ const WeeklySummaryView = ({ projectKey, sprintName }) => {
         <Stack space="space.200">
           <SectionMessage appearance="information">
             <Text>
-              Tuần {isoToDisplay(summary.weekStartDate)} · {summary.totalEntries} bản ghi ·{' '}
-              {summary.blockerCount} có vấn đề
+              Sprint {isoToDisplay(summary.sprintStartDate ?? summary.weekStartDate)} –{' '}
+              {isoToDisplay(summary.sprintEndDate ?? summary.sprintStartDate)} · 2 tuần ·{' '}
+              {summary.totalEntries} bản ghi · {summary.blockerCount} có vấn đề
             </Text>
           </SectionMessage>
           {(summary.days ?? []).map((day) => (
@@ -391,6 +454,20 @@ const App = () => {
   const [statusLoading, setStatusLoading] = useState(true);
   const [historyRef, setHistoryRef] = useState(null);
   const [sprintName, setSprintName] = useState(null);
+  const [activeSprintStart, setActiveSprintStart] = useState(null);
+  const [logViewMounted, setLogViewMounted] = useState(false);
+
+  useEffect(() => {
+    if (activeRoute === VIEW_LOG) {
+      setLogViewMounted(true);
+    }
+  }, [activeRoute]);
+
+  useEffect(() => {
+    if (activeRoute !== VIEW_LOG && logViewMounted) {
+      events.emit('DAILY_TABLE_PAUSE');
+    }
+  }, [activeRoute, logViewMounted]);
 
   useEffect(() => {
     let unlisten;
@@ -429,17 +506,23 @@ const App = () => {
       .then(({ projectEnabled, activeSprint }) => {
         setAppDisabled(!projectEnabled);
         setSprintName(activeSprint?.name ?? null);
+        setActiveSprintStart(activeSprint?.startDate?.slice(0, 10) ?? null);
       })
       .catch(() => setAppDisabled(false))
       .finally(() => setStatusLoading(false));
   }, [projectKey]);
 
   if (activeRoute === null || statusLoading) {
-    return <Spinner size="large" label={UI_COPY.loading} />;
+    return (
+      <Box padding="space.400">
+        <Spinner size="large" label={UI_COPY.loading} />
+      </Box>
+    );
   }
 
   return (
-    <Stack space="space.300">
+    <Box padding="space.400">
+      <Stack space="space.300">
       {!projectKey ? (
         <SectionMessage appearance="warning" title="Cần mở từ project">
           <Text>{UI_COPY.noProject}</Text>
@@ -458,19 +541,33 @@ const App = () => {
         </SectionMessage>
       ) : null}
 
-      {!appDisabled && projectKey && activeRoute === VIEW_DASHBOARD ? (
-        <DashboardView projectKey={projectKey} onLogStandup={goToLog} />
+      {!appDisabled && projectKey ? (
+        <>
+          <Box xcss={{ display: activeRoute === VIEW_DASHBOARD ? 'block' : 'none' }}>
+            <DashboardView projectKey={projectKey} onLogStandup={goToLog} />
+          </Box>
+
+          {logViewMounted ? (
+            <Box xcss={{ display: activeRoute === VIEW_LOG ? 'block' : 'none' }}>
+              <LogStandupForm projectKey={projectKey} sprintName={sprintName} />
+            </Box>
+          ) : null}
+
+          <Box xcss={{ display: activeRoute === VIEW_HISTORY ? 'block' : 'none' }}>
+            <TeamHistoryView projectKey={projectKey} sprintName={sprintName} />
+          </Box>
+
+          <Box xcss={{ display: activeRoute === VIEW_SUMMARY ? 'block' : 'none' }}>
+            <SprintSummaryView
+              projectKey={projectKey}
+              sprintName={sprintName}
+              activeSprintStart={activeSprintStart}
+            />
+          </Box>
+        </>
       ) : null}
-      {!appDisabled && projectKey && activeRoute === VIEW_LOG ? (
-        <LogStandupForm projectKey={projectKey} sprintName={sprintName} />
-      ) : null}
-      {!appDisabled && projectKey && activeRoute === VIEW_HISTORY ? (
-        <TeamHistoryView projectKey={projectKey} sprintName={sprintName} />
-      ) : null}
-      {!appDisabled && projectKey && activeRoute === VIEW_SUMMARY ? (
-        <WeeklySummaryView projectKey={projectKey} sprintName={sprintName} />
-      ) : null}
-    </Stack>
+      </Stack>
+    </Box>
   );
 };
 
