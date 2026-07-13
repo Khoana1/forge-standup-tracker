@@ -1,45 +1,70 @@
-# Team Standup Tracker — Marketplace Listing Draft
+# Team Sync (Standup Tracker) — Marketplace Listing Draft
 
 ## App name
-**Team Standup Tracker**
+**Team Sync** (internal package: `forge-standup-tracker`)
 
 ## Tagline
-Log daily standups in Jira, review team history, and generate weekly summaries.
+Log daily standups in Jira, review team history, and generate sprint summaries.
 
 ## Category
 Productivity · Agile · Team collaboration
 
 ## Short description
-Team Standup Tracker lets agile teams record yesterday / today / blockers updates inside Jira projects, browse team standup history, and export weekly summaries — with admin controls for retention, project scope, and data privacy.
+Team Sync lets agile teams record yesterday / today / blockers updates inside Jira projects, browse team standup history, view a team dashboard, and export sprint summaries — with admin controls for retention, project scope, and data privacy.
 
 ## Key features
-- Daily standup form on the Jira project page
-- Team history table with date range filter
-- Weekly summary generator (Markdown-style text)
-- Admin: global settings, team/project configuration, data export & purge
-- Automated retention purge (scheduled trigger)
+
+- **Project page** (4 views): team dashboard, daily standup log, team history, sprint summary
+- **Issue panel:** standup from issue context with issue linking
+- **Admin (×3):** general settings (`useAsConfig`), team/project configuration (`useAsGetStarted`), data & privacy
+- **Project settings page:** team/project allowlist for project admins
+- **Blocker workflow:** resolve blockers; optional admin notification on new/changed blockers
+- **Data privacy:** JSON export, per-member delete, purge all standup entries
+- **Automated retention purge** (daily scheduled trigger)
+
+## UI stack
+
+| Surface | Technology |
+|---------|------------|
+| Project page | Custom UI (static bundle) |
+| Issue panel, admin pages | Forge UI Kit (`render: native`) |
 
 ## Permissions justification
 
 | Scope | Why it is required |
 |-------|-------------------|
-| `storage:app` | Store standup entries and admin settings (Forge Custom Entity + KVS) |
-| `read:jira-user` | `GET /rest/api/3/myself` — current user's display name |
-| `read:jira-work` | `GET /rest/api/3/project/{key}` — validate project keys in admin config |
+| `storage:app` | Store standup entries and admin settings in Forge KVS |
+| `read:jira-user` | `GET /rest/api/3/myself` and user profile — display name and avatars |
+| `read:jira-work` | Project validation, issue search, permission checks (`mypermissions`) |
+| `write:jira-work` | Issue status transitions from standup (user-initiated); optional blocker notify to project admins |
+| `read:project:jira` | Project role membership — team roster on dashboard |
+| `manage:jira-project` | Read project role actors for team health and notifications |
+| `read:board-scope:jira-software` | Find Jira board for a project |
+| `read:sprint:jira-software` | Active sprint dates for sprint summary view |
+
+All Jira write operations run as the **current user** (`api.asUser()`). The app cannot perform actions the user is not already allowed to perform in Jira.
 
 ## Data handling
-- **Stored:** account ID, display name, project key, date, standup text, timestamps
-- **Not stored:** Issue content, passwords, or third-party credentials
-- **Retention:** Configurable 7–365 days; daily scheduled purge
-- **Export / delete:** Available to Jira admins via Data & Privacy admin page
+
+- **Stored in Forge KVS (`storage:app`):** account ID, display name, project key, date, standup text (yesterday/today/blockers), timestamps, linked issue keys, blocker resolution metadata, admin settings
+- **Not stored:** Full Jira issue content, passwords, or third-party credentials
+- **Retention:** Configurable 7–365 days; daily scheduled purge (`purge-retention` function)
+- **Export:** Jira admins — full JSON export via Data & Privacy admin page
+- **Delete:** Jira admins — per-member purge or purge all standup entries (settings/team config retained)
+- **Multi-site:** One Forge app ID; each installation is tenant-isolated by the platform
 
 ## Support
+
 - Documentation: see `README.md` and `docs/ARCHITECTURE.md`
 - Security: see `docs/SECURITY.md`
 
 ## Screenshots (capture after deploy)
-1. Log Standup tab — form with three fields
-2. Team History tab — DynamicTable with entries
-3. Weekly Summary tab — generated summary
-4. Admin — General Settings
-5. Admin — Data & Privacy export
+
+1. Project page — Team Sync hôm nay (standup form)
+2. Project page — Lịch sử team (history table)
+3. Project page — Tổng kết sprint (sprint summary)
+4. Project page — Tổng quan team (dashboard)
+5. Issue panel — standup with linked issues
+6. Admin — General Settings
+7. Admin — Team Configuration
+8. Admin — Data & Privacy (export + delete)

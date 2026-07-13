@@ -68,6 +68,7 @@ const DataPrivacyPage = () => {
   const [error, setError] = useState(null);
   const [deleteSuccess, setDeleteSuccess] = useState(null);
   const [confirmingId, setConfirmingId] = useState(null);
+  const [confirmingAll, setConfirmingAll] = useState(false);
 
   const loadMembers = useCallback(async () => {
     setMembersLoading(true);
@@ -114,6 +115,29 @@ const DataPrivacyPage = () => {
       setExportData(null);
     } catch (e) {
       setError(e?.message ?? 'Không xóa được dữ liệu thành viên.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setLoading(true);
+    setError(null);
+    setDeleteSuccess(null);
+    try {
+      const result = await invoke('purgeStandupData', {
+        confirm: 'DELETE_ALL_STANDUP_DATA',
+      });
+      setMembers([]);
+      setDeleteSuccess({
+        displayName: 'toàn bộ dữ liệu Team Sync',
+        deleted: result.deleted,
+      });
+      setConfirmingAll(false);
+      setConfirmingId(null);
+      setExportData(null);
+    } catch (e) {
+      setError(e?.message ?? 'Không xóa được toàn bộ dữ liệu.');
     } finally {
       setLoading(false);
     }
@@ -179,6 +203,42 @@ const DataPrivacyPage = () => {
           </SectionMessage>
         ) : null}
         {exportData ? <Text>{JSON.stringify(exportData, null, 2).slice(0, 4000)}…</Text> : null}
+      </Stack>
+
+      <Stack space="space.150">
+        <Heading as="h3">Xóa toàn bộ dữ liệu</Heading>
+        <Text size="small" color="color.text.subtle">
+          Xóa mọi bản ghi Team Sync trên site này. Cài đặt ứng dụng và cấu hình team vẫn được giữ
+          lại.
+        </Text>
+        {!confirmingAll ? (
+          <Button
+            appearance="danger"
+            onClick={() => {
+              setConfirmingAll(true);
+              setConfirmingId(null);
+            }}
+            isDisabled={loading || members.length === 0}
+          >
+            Xóa toàn bộ dữ liệu
+          </Button>
+        ) : (
+          <SectionMessage appearance="warning" title="Không thể hoàn tác">
+            <Stack space="space.100">
+              <Text>
+                Hành động này sẽ xóa toàn bộ bản ghi Team Sync của mọi thành viên trên site này.
+              </Text>
+              <Inline space="space.100">
+                <Button appearance="danger" onClick={handleDeleteAll} isDisabled={loading}>
+                  {loading ? 'Đang xóa…' : 'Xác nhận xóa toàn bộ'}
+                </Button>
+                <Button onClick={() => setConfirmingAll(false)} isDisabled={loading}>
+                  Hủy
+                </Button>
+              </Inline>
+            </Stack>
+          </SectionMessage>
+        )}
       </Stack>
 
       <Stack space="space.100">
