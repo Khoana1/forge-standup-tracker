@@ -1,14 +1,90 @@
 import { invoke } from '@forge/bridge';
 import { extractPlainText } from '../../../../lib/adf-helpers.js';
-import { isoToDayMonth } from '../../../../lib/dates.js';
+import { isoToDayMonth, isoToDisplay } from '../../../../lib/dates.js';
 import { STANDUP_LABELS_SHORT } from '../../../../lib/labels.js';
 import { hadBlockerContent } from '../../../../lib/blockers.js';
 import { groupStandupLinkedIssues } from '../../../../lib/standup-issues.js';
 import { escapeHtml, formatTime } from '../shared/dom.js';
-import { loadAvatars, userAvatarHtml } from '../shared/avatars.js';
+import { userAvatarHtml } from '../shared/avatars.js';
 import { bindIssueOpen, enrichIssues } from '../shared/issues.js';
 import { workItemsSectionsHtml } from '../shared/work-items.js';
 import { dashboardStatsHtml, progressBarHtml } from '../shared/progress.js';
+
+const ageLabel = (blocker) => {
+  if (blocker.isToday) return 'Hôm nay';
+  if (blocker.ageDays === 1) return 'Hôm qua';
+  return `${blocker.ageDays} ngày trước`;
+};
+
+const openBlockerCardHtml = (blocker, canAdminister, avatars) => {
+  const text = extractPlainText(blocker.blockers);
+  const badges = [
+    blocker.typeLabel
+      ? `<span class="blocker-badge">${escapeHtml(blocker.typeLabel)}</span>`
+      : '',
+    blocker.isStale ? '<span class="blocker-badge blocker-badge--stale">Quá hạn</span>' : '',
+    blocker.isToday && !blocker.isStale
+      ? '<span class="blocker-badge blocker-badge--new">Mới</span>'
+      : '',
+  ]
+    .filter(Boolean)
+    .join('');
+
+  const issueKeys = (blocker.linkedIssueKeys ?? [])
+    .map(
+      (key) =>
+        `<button type="button" class="issue-pill" data-open="${escapeHtml(key)}">${escapeHtml(key)}</button>`
+    )
+    .join('');
+
+  return `
+    <article class="blocker-card${blocker.isStale ? ' is-stale' : ''}" data-blocker-key="${escapeHtml(blocker.key)}">
+      <div class="blocker-card-badges">${badges}</div>
+      <p class="blocker-card-text">${escapeHtml(text)}</p>
+      <div class="blocker-card-meta">
+        ${userAvatarHtml(blocker.accountId, blocker.displayName, avatars?.[blocker.accountId] ?? '', 'entry-avatar')}
+        <span>${escapeHtml(blocker.displayName)} · ${escapeHtml(isoToDisplay(blocker.date))} · ${escapeHtml(ageLabel(blocker))}</span>
+      </div>
+      ${issueKeys ? `<div class="blocker-card-issues">${issueKeys}</div>` : ''}
+      ${
+        canAdminister
+          ? `<button type="button" class="btn-resolve" data-resolve-blocker="${escapeHtml(blocker.key)}">Đánh dấu đã xử lý</button>`
+          : ''
+      }
+    </article>
+  `;
+};
+
+const openBlockersSectionHtml = (blockers, summary, canAdminister, avatars) => {
+  if (!blockers.length) return '';
+
+  const staleHint =
+    (summary?.stale ?? 0) > 0
+      ? `<div class="alert alert-warning"><p><strong>Có ${summary.stale} vấn đề quá hạn</strong> — nên thảo luận trong buổi Team Sync hoặc đánh dấu đã xử lý.</p></div>`
+      : '';
+
+  return `
+    <section class="section open-blockers-section" id="open-blockers">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">Vấn đề đang mở</h3>
+          <p class="section-filter-hint">${blockers.length} vấn đề chưa xử lý${
+            summary?.stale ? ` · ${summary.stale} quá hạn` : ''
+          }</p>
+        </div>
+      </div>
+      ${staleHint}
+      <div class="blocker-list">
+        ${blockers.map((b) => openBlockerCardHtml(b, canAdminister, avatars)).join('')}
+      </div>
+      ${
+        !canAdminister
+          ? '<p class="section-filter-hint">Chỉ project admin mới đánh dấu vấn đề đã xử lý.</p>'
+          : ''
+      }
+    </section>
+  `;
+};
 
 const adminHintHtml = (permissions) => {
   const canAdmin = permissions?.canAdministerProject;
@@ -17,7 +93,7 @@ const adminHintHtml = (permissions) => {
   const parts = [];
   if (canAdmin) {
     parts.push(
-      'Quản trị project: đánh dấu xử lý vấn đề trên timeline; cấu hình tại <strong>Project settings → Apps → Team Sync</strong>.'
+      'Quản trị project: đánh dấu xử lý vấn đề tại mục <strong>Vấn đề đang mở</strong>; cấu hình tại <strong>Project settings → Apps → Team Sync</strong>.'
     );
   }
   if (isJiraAdmin) {
@@ -85,7 +161,7 @@ const entryCardHtml = (entry, labels, canAdminister, avatars) => {
   `;
 };
 
-const resolveModalHtml = (entry) => `
+const resolveModalHtml = (target) => `
   <div class="modal-backdrop" data-resolve-modal role="presentation">
     <div class="modal-dialog" role="dialog" aria-modal="true">
       <div class="modal-header">
@@ -94,9 +170,9 @@ const resolveModalHtml = (entry) => `
       </div>
       <div class="modal-body">
         <p class="panel-label">Thành viên</p>
-        <p class="modal-member">${escapeHtml(entry.displayName)}</p>
+        <p class="modal-member">${escapeHtml(target.displayName)}</p>
         <p class="panel-label">Vấn đề</p>
-        <p class="modal-blocker">${escapeHtml(entry.blockers)}</p>
+        <p class="modal-blocker">${escapeHtml(extractPlainText(target.blockers))}</p>
         <label class="panel-label" for="resolution-plan">Phương án giải quyết</label>
         <textarea id="resolution-plan" class="paste-input" rows="4" placeholder="Mô tả cách team xử lý khó khăn này…"></textarea>
         <p class="error resolve-error" hidden></p>
@@ -155,6 +231,17 @@ export async function renderDashboard(container, ctx) {
   );
 
   const filteredMember = members.find((m) => m.accountId === ctx.memberFilter);
+  const activeBlockers = (data?.activeBlockers ?? [])
+    .filter((b) => !ctx.memberFilter || b.accountId === ctx.memberFilter)
+    .map((b) => ({
+      ...b,
+      blockers: extractPlainText(b.blockers),
+    }));
+  const blockerSummary = {
+    total: activeBlockers.length,
+    today: activeBlockers.filter((b) => b.isToday).length,
+    stale: activeBlockers.filter((b) => b.isStale).length,
+  };
 
   container.innerHTML = `
     <div class="page dashboard-page">
@@ -172,6 +259,8 @@ export async function renderDashboard(container, ctx) {
       ${adminHintHtml(data?.permissions)}
 
       ${dashboardStatsHtml(data?.stats)}
+
+      ${openBlockersSectionHtml(activeBlockers, blockerSummary, canAdminister, avatars)}
 
       ${
         members.length
@@ -262,45 +351,69 @@ export async function renderDashboard(container, ctx) {
   container.querySelector('#clear-member-filter-timeline')?.addEventListener('click', clearFilter);
 
   const modalSlot = container.querySelector('#resolve-modal-slot');
+
+  const openResolveModal = (target) => {
+    if (!target || !modalSlot) return;
+    modalSlot.innerHTML = resolveModalHtml(target);
+
+    const close = () => {
+      modalSlot.innerHTML = '';
+    };
+
+    modalSlot.querySelectorAll('[data-close-resolve]').forEach((el) => {
+      el.addEventListener('click', close);
+    });
+
+    modalSlot.querySelector('[data-save-resolve]')?.addEventListener('click', async () => {
+      const plan = modalSlot.querySelector('#resolution-plan')?.value?.trim() ?? '';
+      const errEl = modalSlot.querySelector('.resolve-error');
+      if (plan.length < 3) {
+        if (errEl) {
+          errEl.textContent = 'Phương án giải quyết phải có ít nhất 3 ký tự.';
+          errEl.hidden = false;
+        }
+        return;
+      }
+      try {
+        await invoke('resolveBlocker', {
+          projectKey,
+          date: target.date,
+          accountId: target.accountId,
+          resolutionPlan: plan,
+        });
+        close();
+        await renderDashboard(container, ctx);
+      } catch (e) {
+        if (errEl) {
+          errEl.textContent = e?.message ?? 'Không lưu được phương án giải quyết.';
+          errEl.hidden = false;
+        }
+      }
+    });
+  };
+
   container.querySelectorAll('[data-resolve]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const entry = enrichedTimeline.find((e) => e.accountId === btn.dataset.resolve);
-      if (!entry || !modalSlot) return;
-      modalSlot.innerHTML = resolveModalHtml(entry);
-
-      const close = () => {
-        modalSlot.innerHTML = '';
-      };
-
-      modalSlot.querySelectorAll('[data-close-resolve]').forEach((el) => {
-        el.addEventListener('click', close);
+      if (!entry) return;
+      openResolveModal({
+        accountId: entry.accountId,
+        displayName: entry.displayName,
+        blockers: entry.blockers,
+        date: data.today,
       });
+    });
+  });
 
-      modalSlot.querySelector('[data-save-resolve]')?.addEventListener('click', async () => {
-        const plan = modalSlot.querySelector('#resolution-plan')?.value?.trim() ?? '';
-        const errEl = modalSlot.querySelector('.resolve-error');
-        if (plan.length < 3) {
-          if (errEl) {
-            errEl.textContent = 'Phương án giải quyết phải có ít nhất 3 ký tự.';
-            errEl.hidden = false;
-          }
-          return;
-        }
-        try {
-          await invoke('resolveBlocker', {
-            projectKey,
-            date: data.today,
-            accountId: entry.accountId,
-            resolutionPlan: plan,
-          });
-          close();
-          await renderDashboard(container, ctx);
-        } catch (e) {
-          if (errEl) {
-            errEl.textContent = e?.message ?? 'Không lưu được phương án giải quyết.';
-            errEl.hidden = false;
-          }
-        }
+  container.querySelectorAll('[data-resolve-blocker]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const blocker = activeBlockers.find((b) => b.key === btn.dataset.resolveBlocker);
+      if (!blocker) return;
+      openResolveModal({
+        accountId: blocker.accountId,
+        displayName: blocker.displayName,
+        blockers: blocker.blockers,
+        date: blocker.date,
       });
     });
   });

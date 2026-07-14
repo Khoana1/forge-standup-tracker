@@ -6550,6 +6550,53 @@ var dashboardStatsHtml = (stats) => {
 };
 
 // src/frontend/custom-ui/project-app/views/dashboard.js
+var ageLabel = (blocker) => {
+  if (blocker.isToday) return "H\xF4m nay";
+  if (blocker.ageDays === 1) return "H\xF4m qua";
+  return `${blocker.ageDays} ng\xE0y tr\u01B0\u1EDBc`;
+};
+var openBlockerCardHtml = (blocker, canAdminister, avatars) => {
+  const text = extractPlainText(blocker.blockers);
+  const badges = [
+    blocker.typeLabel ? `<span class="blocker-badge">${escapeHtml(blocker.typeLabel)}</span>` : "",
+    blocker.isStale ? '<span class="blocker-badge blocker-badge--stale">Qu\xE1 h\u1EA1n</span>' : "",
+    blocker.isToday && !blocker.isStale ? '<span class="blocker-badge blocker-badge--new">M\u1EDBi</span>' : ""
+  ].filter(Boolean).join("");
+  const issueKeys = (blocker.linkedIssueKeys ?? []).map(
+    (key) => `<button type="button" class="issue-pill" data-open="${escapeHtml(key)}">${escapeHtml(key)}</button>`
+  ).join("");
+  return `
+    <article class="blocker-card${blocker.isStale ? " is-stale" : ""}" data-blocker-key="${escapeHtml(blocker.key)}">
+      <div class="blocker-card-badges">${badges}</div>
+      <p class="blocker-card-text">${escapeHtml(text)}</p>
+      <div class="blocker-card-meta">
+        ${userAvatarHtml(blocker.accountId, blocker.displayName, avatars?.[blocker.accountId] ?? "", "entry-avatar")}
+        <span>${escapeHtml(blocker.displayName)} \xB7 ${escapeHtml(isoToDisplay(blocker.date))} \xB7 ${escapeHtml(ageLabel(blocker))}</span>
+      </div>
+      ${issueKeys ? `<div class="blocker-card-issues">${issueKeys}</div>` : ""}
+      ${canAdminister ? `<button type="button" class="btn-resolve" data-resolve-blocker="${escapeHtml(blocker.key)}">\u0110\xE1nh d\u1EA5u \u0111\xE3 x\u1EED l\xFD</button>` : ""}
+    </article>
+  `;
+};
+var openBlockersSectionHtml = (blockers, summary, canAdminister, avatars) => {
+  if (!blockers.length) return "";
+  const staleHint = (summary?.stale ?? 0) > 0 ? `<div class="alert alert-warning"><p><strong>C\xF3 ${summary.stale} v\u1EA5n \u0111\u1EC1 qu\xE1 h\u1EA1n</strong> \u2014 n\xEAn th\u1EA3o lu\u1EADn trong bu\u1ED5i Team Sync ho\u1EB7c \u0111\xE1nh d\u1EA5u \u0111\xE3 x\u1EED l\xFD.</p></div>` : "";
+  return `
+    <section class="section open-blockers-section" id="open-blockers">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">V\u1EA5n \u0111\u1EC1 \u0111ang m\u1EDF</h3>
+          <p class="section-filter-hint">${blockers.length} v\u1EA5n \u0111\u1EC1 ch\u01B0a x\u1EED l\xFD${summary?.stale ? ` \xB7 ${summary.stale} qu\xE1 h\u1EA1n` : ""}</p>
+        </div>
+      </div>
+      ${staleHint}
+      <div class="blocker-list">
+        ${blockers.map((b) => openBlockerCardHtml(b, canAdminister, avatars)).join("")}
+      </div>
+      ${!canAdminister ? '<p class="section-filter-hint">Ch\u1EC9 project admin m\u1EDBi \u0111\xE1nh d\u1EA5u v\u1EA5n \u0111\u1EC1 \u0111\xE3 x\u1EED l\xFD.</p>' : ""}
+    </section>
+  `;
+};
 var adminHintHtml = (permissions) => {
   const canAdmin = permissions?.canAdministerProject;
   const isJiraAdmin = permissions?.isJiraAdmin;
@@ -6557,7 +6604,7 @@ var adminHintHtml = (permissions) => {
   const parts = [];
   if (canAdmin) {
     parts.push(
-      "Qu\u1EA3n tr\u1ECB project: \u0111\xE1nh d\u1EA5u x\u1EED l\xFD v\u1EA5n \u0111\u1EC1 tr\xEAn timeline; c\u1EA5u h\xECnh t\u1EA1i <strong>Project settings \u2192 Apps \u2192 Team Sync</strong>."
+      "Qu\u1EA3n tr\u1ECB project: \u0111\xE1nh d\u1EA5u x\u1EED l\xFD v\u1EA5n \u0111\u1EC1 t\u1EA1i m\u1EE5c <strong>V\u1EA5n \u0111\u1EC1 \u0111ang m\u1EDF</strong>; c\u1EA5u h\xECnh t\u1EA1i <strong>Project settings \u2192 Apps \u2192 Team Sync</strong>."
     );
   }
   if (isJiraAdmin) {
@@ -6608,7 +6655,7 @@ var entryCardHtml = (entry, labels, canAdminister, avatars) => {
     </article>
   `;
 };
-var resolveModalHtml = (entry) => `
+var resolveModalHtml = (target) => `
   <div class="modal-backdrop" data-resolve-modal role="presentation">
     <div class="modal-dialog" role="dialog" aria-modal="true">
       <div class="modal-header">
@@ -6617,9 +6664,9 @@ var resolveModalHtml = (entry) => `
       </div>
       <div class="modal-body">
         <p class="panel-label">Th\xE0nh vi\xEAn</p>
-        <p class="modal-member">${escapeHtml(entry.displayName)}</p>
+        <p class="modal-member">${escapeHtml(target.displayName)}</p>
         <p class="panel-label">V\u1EA5n \u0111\u1EC1</p>
-        <p class="modal-blocker">${escapeHtml(entry.blockers)}</p>
+        <p class="modal-blocker">${escapeHtml(extractPlainText(target.blockers))}</p>
         <label class="panel-label" for="resolution-plan">Ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt</label>
         <textarea id="resolution-plan" class="paste-input" rows="4" placeholder="M\xF4 t\u1EA3 c\xE1ch team x\u1EED l\xFD kh\xF3 kh\u0103n n\xE0y\u2026"></textarea>
         <p class="error resolve-error" hidden></p>
@@ -6673,6 +6720,15 @@ async function renderDashboard(container, ctx2) {
     })
   );
   const filteredMember = members.find((m) => m.accountId === ctx2.memberFilter);
+  const activeBlockers = (data?.activeBlockers ?? []).filter((b) => !ctx2.memberFilter || b.accountId === ctx2.memberFilter).map((b) => ({
+    ...b,
+    blockers: extractPlainText(b.blockers)
+  }));
+  const blockerSummary = {
+    total: activeBlockers.length,
+    today: activeBlockers.filter((b) => b.isToday).length,
+    stale: activeBlockers.filter((b) => b.isStale).length
+  };
   container.innerHTML = `
     <div class="page dashboard-page">
       <header class="page-header">
@@ -6689,6 +6745,8 @@ async function renderDashboard(container, ctx2) {
       ${adminHintHtml(data?.permissions)}
 
       ${dashboardStatsHtml(data?.stats)}
+
+      ${openBlockersSectionHtml(activeBlockers, blockerSummary, canAdminister, avatars)}
 
       ${members.length ? `<section class="section">
               <div class="section-header">
@@ -6751,42 +6809,63 @@ async function renderDashboard(container, ctx2) {
   container.querySelector("#clear-member-filter")?.addEventListener("click", clearFilter);
   container.querySelector("#clear-member-filter-timeline")?.addEventListener("click", clearFilter);
   const modalSlot = container.querySelector("#resolve-modal-slot");
+  const openResolveModal = (target) => {
+    if (!target || !modalSlot) return;
+    modalSlot.innerHTML = resolveModalHtml(target);
+    const close = () => {
+      modalSlot.innerHTML = "";
+    };
+    modalSlot.querySelectorAll("[data-close-resolve]").forEach((el) => {
+      el.addEventListener("click", close);
+    });
+    modalSlot.querySelector("[data-save-resolve]")?.addEventListener("click", async () => {
+      const plan = modalSlot.querySelector("#resolution-plan")?.value?.trim() ?? "";
+      const errEl = modalSlot.querySelector(".resolve-error");
+      if (plan.length < 3) {
+        if (errEl) {
+          errEl.textContent = "Ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt ph\u1EA3i c\xF3 \xEDt nh\u1EA5t 3 k\xFD t\u1EF1.";
+          errEl.hidden = false;
+        }
+        return;
+      }
+      try {
+        await (0, import_bridge3.invoke)("resolveBlocker", {
+          projectKey,
+          date: target.date,
+          accountId: target.accountId,
+          resolutionPlan: plan
+        });
+        close();
+        await renderDashboard(container, ctx2);
+      } catch (e) {
+        if (errEl) {
+          errEl.textContent = e?.message ?? "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt.";
+          errEl.hidden = false;
+        }
+      }
+    });
+  };
   container.querySelectorAll("[data-resolve]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const entry = enrichedTimeline.find((e) => e.accountId === btn.dataset.resolve);
-      if (!entry || !modalSlot) return;
-      modalSlot.innerHTML = resolveModalHtml(entry);
-      const close = () => {
-        modalSlot.innerHTML = "";
-      };
-      modalSlot.querySelectorAll("[data-close-resolve]").forEach((el) => {
-        el.addEventListener("click", close);
+      if (!entry) return;
+      openResolveModal({
+        accountId: entry.accountId,
+        displayName: entry.displayName,
+        blockers: entry.blockers,
+        date: data.today
       });
-      modalSlot.querySelector("[data-save-resolve]")?.addEventListener("click", async () => {
-        const plan = modalSlot.querySelector("#resolution-plan")?.value?.trim() ?? "";
-        const errEl = modalSlot.querySelector(".resolve-error");
-        if (plan.length < 3) {
-          if (errEl) {
-            errEl.textContent = "Ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt ph\u1EA3i c\xF3 \xEDt nh\u1EA5t 3 k\xFD t\u1EF1.";
-            errEl.hidden = false;
-          }
-          return;
-        }
-        try {
-          await (0, import_bridge3.invoke)("resolveBlocker", {
-            projectKey,
-            date: data.today,
-            accountId: entry.accountId,
-            resolutionPlan: plan
-          });
-          close();
-          await renderDashboard(container, ctx2);
-        } catch (e) {
-          if (errEl) {
-            errEl.textContent = e?.message ?? "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt.";
-            errEl.hidden = false;
-          }
-        }
+    });
+  });
+  container.querySelectorAll("[data-resolve-blocker]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const blocker = activeBlockers.find((b) => b.key === btn.dataset.resolveBlocker);
+      if (!blocker) return;
+      openResolveModal({
+        accountId: blocker.accountId,
+        displayName: blocker.displayName,
+        blockers: blocker.blockers,
+        date: blocker.date
       });
     });
   });

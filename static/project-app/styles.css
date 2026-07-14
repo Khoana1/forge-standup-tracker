@@ -1307,3 +1307,90 @@ body {
 .btn-resolve:hover {
   background: var(--color-background-secondary);
 }
+
+.open-blockers-section .blocker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blocker-card {
+  padding: 14px 16px;
+  border: 0.5px solid #dfe1e6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.blocker-card.is-stale {
+  border-color: #f87168;
+  background: #fff8f7;
+}
+
+.blocker-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.blocker-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f4f5f7;
+  color: #44546f;
+}
+
+.blocker-badge--stale {
+  background: #ffebe6;
+  color: #ae2e24;
+}
+
+.blocker-badge--new {
+  background: #dffcf0;
+  color: #216e4e;
+}
+
+.blocker-card-text {
+  margin: 0 0 10px;
+  color: #172b4d;
+  white-space: pre-wrap;
+}
+
+.blocker-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #626f86;
+}
+
+.blocker-card-issues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.issue-pill {
+  padding: 2px 8px;
+  border: 0.5px solid #dfe1e6;
+  border-radius: 999px;
+  background: #f7f8f9;
+  color: #0c66e4;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.issue-pill:hover {
+  background: #e9f2ff;
+}
+
+.blocker-card .btn-resolve {
+  margin-top: 4px;
+}
