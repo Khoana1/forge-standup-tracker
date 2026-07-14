@@ -48,7 +48,6 @@ modules:
       resource: admin-data
       resolver:
         function: resolver
-      render: native
       title: Team Sync — Data & Privacy
   scheduledTrigger:
     - key: standup-retention-purge
@@ -70,7 +69,7 @@ resources:
   - key: admin-team
     path: src/frontend/admin/team.jsx
   - key: admin-data
-    path: src/frontend/admin/data.jsx
+    path: static/admin-data
   - key: issue-hub-ui
     path: static/issue-hub
   - key: daily-report-table-ui
@@ -87,6 +86,11 @@ permissions:
     - manage:jira-project
     - read:board-scope:jira-software
     - read:sprint:jira-software
+  external:
+    images:
+      - '*.atl-paas.net'
+      - '*.wp.com'
+      - '*.atlassian.com'
 app:
   runtime:
     name: nodejs24.x

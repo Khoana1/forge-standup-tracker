@@ -1,7 +1,7 @@
 import { listActiveBlockers, summarizeBlockers } from '../lib/blocker-analytics.js';
 import { hasActiveBlocker } from '../lib/blockers.js';
 import { fetchActiveSprint } from '../lib/jira-sprint.js';
-import { fetchProjectRoleMembers, fetchUserAvatars } from '../lib/jira-users.js';
+import { fetchMyDisplayName, fetchProjectRoleMembers, fetchUserAvatars } from '../lib/jira-users.js';
 import { createLogger } from '../lib/logger.js';
 import { assertProjectAdmin, getMyProjectPermissions, userHasGlobalPermission } from '../lib/permissions.js';
 import { getGlobalSettings } from '../lib/settings.js';
@@ -10,6 +10,7 @@ import { queryProjectEntries, updateBlockerResolved } from '../lib/standup-store
 import {
   computeSprintCompletionRate,
   deriveTeamMembers,
+  ensureViewerInMembers,
   filterEntriesToMembers,
   mergeTeamMembers,
 } from '../lib/team-health.js';
@@ -47,10 +48,18 @@ export const getProjectDashboard = async ({ payload, context }) => {
       fetchProjectRoleMembers(projectKey),
     ]);
 
-  const members =
+  const membersFromRoles =
     projectRoleMembers !== null
       ? mergeTeamMembers(projectRoleMembers, entries)
       : deriveTeamMembers(entries);
+
+  const needsViewerName =
+    Boolean(accountId) && !membersFromRoles.some((member) => member.accountId === accountId);
+  const viewerDisplayName = needsViewerName ? await fetchMyDisplayName() : null;
+  const members = ensureViewerInMembers(membersFromRoles, {
+    accountId,
+    displayName: viewerDisplayName,
+  });
 
   const scopedEntries =
     projectRoleMembers !== null ? filterEntriesToMembers(entries, members) : entries;

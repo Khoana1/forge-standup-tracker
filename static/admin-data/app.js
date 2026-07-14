@@ -392,20 +392,20 @@ function __importStar(mod) {
 function __importDefault(mod) {
   return mod && mod.__esModule ? mod : { default: mod };
 }
-function __classPrivateFieldGet(receiver, state, kind, f) {
+function __classPrivateFieldGet(receiver, state2, kind, f) {
   if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-  return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+  if (typeof state2 === "function" ? receiver !== state2 || !f : !state2.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+  return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state2.get(receiver);
 }
-function __classPrivateFieldSet(receiver, state, value, kind, f) {
+function __classPrivateFieldSet(receiver, state2, value, kind, f) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-  return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+  if (typeof state2 === "function" ? receiver !== state2 || !f : !state2.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+  return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state2.set(receiver, value), value;
 }
-function __classPrivateFieldIn(state, receiver) {
+function __classPrivateFieldIn(state2, receiver) {
   if (receiver === null || typeof receiver !== "object" && typeof receiver !== "function") throw new TypeError("Cannot use 'in' operator on non-object");
-  return typeof state === "function" ? receiver === state : state.has(receiver);
+  return typeof state2 === "function" ? receiver === state2 : state2.has(receiver);
 }
 function __addDisposableResource(env, value, async) {
   if (value !== null && value !== void 0) {
@@ -670,12 +670,12 @@ var require_invoke = __commonJS({
       return callBridge("invoke", { functionKey, payload });
     };
     var limitedInvoke = (0, utils_1.withRateLimiter)(_invoke, 500, 1e3 * 25, "Resolver calls are rate limited at 500req/25s");
-    function invoke9(functionKey, payload) {
+    function invoke3(functionKey, payload) {
       return limitedInvoke(functionKey, payload);
     }
-    exports.invoke = invoke9;
+    exports.invoke = invoke3;
     function makeInvoke() {
-      return invoke9;
+      return invoke3;
     }
     exports.makeInvoke = makeInvoke;
   }
@@ -1670,12 +1670,12 @@ var require_memoize = __commonJS({
         throw new TypeError(FUNC_ERROR_TEXT);
       }
       var memoized = function() {
-        var args = arguments, key = resolver ? resolver.apply(this, args) : args[0], cache2 = memoized.cache;
-        if (cache2.has(key)) {
-          return cache2.get(key);
+        var args = arguments, key = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
+        if (cache.has(key)) {
+          return cache.get(key);
         }
         var result = func.apply(this, args);
-        memoized.cache = cache2.set(key, result) || cache2;
+        memoized.cache = cache.set(key, result) || cache;
         return result;
       };
       memoized.cache = new (memoize.Cache || MapCache)();
@@ -1693,12 +1693,12 @@ var require_memoizeCapped = __commonJS({
     var MAX_MEMOIZE_SIZE = 500;
     function memoizeCapped(func) {
       var result = memoize(func, function(key) {
-        if (cache2.size === MAX_MEMOIZE_SIZE) {
-          cache2.clear();
+        if (cache.size === MAX_MEMOIZE_SIZE) {
+          cache.clear();
         }
         return key;
       });
-      var cache2 = result.cache;
+      var cache = result.cache;
       return result;
     }
     module.exports = memoizeCapped;
@@ -6063,8 +6063,8 @@ function new_unsafe_buf(len) {
 }
 function s2ab(s) {
   if (typeof ArrayBuffer === "undefined") return s2a(s);
-  var buf = new ArrayBuffer(s.length), view2 = new Uint8Array(buf);
-  for (var i = 0; i != s.length; ++i) view2[i] = s.charCodeAt(i) & 255;
+  var buf = new ArrayBuffer(s.length), view = new Uint8Array(buf);
+  for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 255;
   return buf;
 }
 function a2s(data) {
@@ -10409,9 +10409,9 @@ function parse_Window2(blob, length, opts) {
   var f = blob.read_shift(2);
   return { RTL: f & 64 };
 }
-function write_Window2(view2) {
+function write_Window2(view) {
   var o = new_buf(18), f = 1718;
-  if (view2 && view2.RTL) f |= 64;
+  if (view && view.RTL) f |= 64;
   o.write_shift(2, f);
   o.write_shift(4, 0);
   o.write_shift(4, 64);
@@ -12346,7 +12346,7 @@ function parse_sty_bin(data, themes, opts) {
   for (var y in table_fmt) styles.NumberFmt[y] = table_fmt[y];
   styles.CellXf = [];
   styles.Fonts = [];
-  var state = [];
+  var state2 = [];
   var pass = false;
   recordhopper(data, function hopper_sty(val, R, RT) {
     switch (RT) {
@@ -12367,7 +12367,7 @@ function parse_sty_bin(data, themes, opts) {
       case 46:
         break;
       case 47:
-        if (state[state.length - 1] == 617) {
+        if (state2[state2.length - 1] == 617) {
           styles.CellXf.push(val);
         }
         break;
@@ -12398,17 +12398,17 @@ function parse_sty_bin(data, themes, opts) {
         pass = false;
         break;
       case 37:
-        state.push(RT);
+        state2.push(RT);
         pass = true;
         break;
       case 38:
-        state.pop();
+        state2.pop();
         pass = false;
         break;
       default:
-        if (R.T > 0) state.push(RT);
-        else if (R.T < 0) state.pop();
-        else if (!pass || opts.WTF && state[state.length - 1] != 37) throw new Error("Unexpected record 0x" + RT.toString(16));
+        if (R.T > 0) state2.push(RT);
+        else if (R.T < 0) state2.pop();
+        else if (!pass || opts.WTF && state2[state2.length - 1] != 37) throw new Error("Unexpected record 0x" + RT.toString(16));
     }
   });
   return styles;
@@ -13003,7 +13003,7 @@ function write_BrtBeginEsmdb(cnt, cm) {
 function parse_xlmeta_bin(data, name, _opts) {
   var out = { Types: [], Cell: [], Value: [] };
   var opts = _opts || {};
-  var state = [];
+  var state2 = [];
   var pass = false;
   var metatype = 2;
   recordhopper(data, function(val, R, RT) {
@@ -13026,16 +13026,16 @@ function parse_xlmeta_bin(data, name, _opts) {
         metatype = 2;
         break;
       case 35:
-        state.push(RT);
+        state2.push(RT);
         pass = true;
         break;
       case 36:
-        state.pop();
+        state2.pop();
         pass = false;
         break;
       default:
         if (R.T) {
-        } else if (!pass || opts.WTF && state[state.length - 1] != 35)
+        } else if (!pass || opts.WTF && state2[state2.length - 1] != 35)
           throw new Error("Unexpected record 0x" + RT.toString(16));
     }
   });
@@ -15751,7 +15751,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles) {
   var s = opts.dense ? [] : {};
   var ref;
   var refguess = { s: { r: 2e6, c: 2e6 }, e: { r: 0, c: 0 } };
-  var state = [];
+  var state2 = [];
   var pass = false, end = false;
   var row, p, cf, R, C, addr, sstr, rr, cell;
   var merges = [];
@@ -16091,11 +16091,11 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles) {
         pass = false;
         break;
       case 37:
-        state.push(RT);
+        state2.push(RT);
         pass = true;
         break;
       case 38:
-        state.pop();
+        state2.pop();
         pass = false;
         break;
       default:
@@ -16391,12 +16391,12 @@ function parse_chart(data, name, opts, rels, wb, csheet) {
   var C = 0, R = 0, col = "A";
   var refguess = { s: { r: 2e6, c: 2e6 }, e: { r: 0, c: 0 } };
   (data.match(/<c:numCache>[\s\S]*?<\/c:numCache>/gm) || []).forEach(function(nc) {
-    var cache2 = parse_Cache(nc);
+    var cache = parse_Cache(nc);
     refguess.s.r = refguess.s.c = 0;
     refguess.e.c = C;
     col = encode_col(C);
-    cache2[0].forEach(function(n, i) {
-      cs[col + encode_row(i)] = { t: "n", v: n, z: cache2[1] };
+    cache[0].forEach(function(n, i) {
+      cs[col + encode_row(i)] = { t: "n", v: n, z: cache[1] };
       R = i;
     });
     if (refguess.e.r < R) refguess.e.r = R;
@@ -16425,7 +16425,7 @@ function parse_cs_bin(data, opts, idx, rels, wb) {
   if (!data) return data;
   if (!rels) rels = { "!id": {} };
   var s = { "!type": "chart", "!drawel": null, "!rel": "" };
-  var state = [];
+  var state2 = [];
   var pass = false;
   recordhopper(data, function cs_parse(val, R, RT) {
     switch (RT) {
@@ -16459,14 +16459,14 @@ function parse_cs_bin(data, opts, idx, rels, wb) {
         pass = false;
         break;
       case 37:
-        state.push(RT);
+        state2.push(RT);
         break;
       case 38:
-        state.pop();
+        state2.pop();
         break;
       default:
-        if (R.T > 0) state.push(RT);
-        else if (R.T < 0) state.pop();
+        if (R.T > 0) state2.push(RT);
+        else if (R.T < 0) state2.pop();
         else if (!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
     }
   }, opts);
@@ -16922,7 +16922,7 @@ function parse_BrtName(data, length, opts) {
 }
 function parse_wb_bin(data, opts) {
   var wb = { AppVersion: {}, WBProps: {}, WBView: [], Sheets: [], CalcPr: {}, xmlns: "" };
-  var state = [];
+  var state2 = [];
   var pass = false;
   if (!opts) opts = {};
   opts.biff = 12;
@@ -17032,26 +17032,26 @@ function parse_wb_bin(data, opts) {
       case 2091:
         break;
       case 35:
-        state.push(RT);
+        state2.push(RT);
         pass = true;
         break;
       case 36:
-        state.pop();
+        state2.pop();
         pass = false;
         break;
       case 37:
-        state.push(RT);
+        state2.push(RT);
         pass = true;
         break;
       case 38:
-        state.pop();
+        state2.pop();
         pass = false;
         break;
       case 16:
         break;
       default:
         if (R.T) {
-        } else if (!pass || opts.WTF && state[state.length - 1] != 37 && state[state.length - 1] != 35) throw new Error("Unexpected record 0x" + RT.toString(16));
+        } else if (!pass || opts.WTF && state2[state2.length - 1] != 37 && state2[state2.length - 1] != 35) throw new Error("Unexpected record 0x" + RT.toString(16));
     }
   }, opts);
   parse_wb_defaults(wb);
@@ -17425,7 +17425,7 @@ function parse_xlml_xml(d, _opts) {
     "On/Off": '"Yes";"Yes";"No";@'
   };
   var Rn;
-  var state = [], tmp;
+  var state2 = [], tmp;
   if (DENSE != null && opts.dense == null) opts.dense = DENSE;
   var sheets = {}, sheetnames = [], cursheet = opts.dense ? [] : {}, sheetname = "";
   var cell = {}, row = {};
@@ -17448,12 +17448,12 @@ function parse_xlml_xml(d, _opts) {
     case "data":
       if (raw_Rn3 == "data") {
         if (Rn[1] === "/") {
-          if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
-        } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state.push([Rn[3], true]);
+          if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+        } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state2.push([Rn[3], true]);
         break;
       }
-      if (state[state.length - 1][1]) break;
-      if (Rn[1] === "/") parse_xlml_data(str.slice(didx, Rn.index), ss, dtag, state[state.length - 1][0] == /*"Comment"*/
+      if (state2[state2.length - 1][1]) break;
+      if (Rn[1] === "/") parse_xlml_data(str.slice(didx, Rn.index), ss, dtag, state2[state2.length - 1][0] == /*"Comment"*/
       "comment" ? comment : cell, { c, r }, styles, cstys[c], row, arrayf, opts);
       else {
         ss = "";
@@ -17533,7 +17533,7 @@ function parse_xlml_xml(d, _opts) {
       break;
     case "worksheet":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
         sheetnames.push(sheetname);
         if (refguess.s.r <= refguess.e.r && refguess.s.c <= refguess.e.c) {
           cursheet["!ref"] = encode_range(refguess);
@@ -17550,7 +17550,7 @@ function parse_xlml_xml(d, _opts) {
       } else {
         refguess = { s: { r: 2e6, c: 2e6 }, e: { r: 0, c: 0 } };
         r = c = 0;
-        state.push([Rn[3], false]);
+        state2.push([Rn[3], false]);
         tmp = xlml_parsexmltag(Rn[0]);
         sheetname = unescapexml(tmp.Name);
         cursheet = opts.dense ? [] : {};
@@ -17563,10 +17563,10 @@ function parse_xlml_xml(d, _opts) {
       break;
     case "table":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
       } else if (Rn[0].slice(-2) == "/>") break;
       else {
-        state.push([Rn[3], false]);
+        state2.push([Rn[3], false]);
         cstys = [];
         seencol = false;
       }
@@ -17587,7 +17587,7 @@ function parse_xlml_xml(d, _opts) {
       }
       break;
     case "column":
-      if (state[state.length - 1][0] !== /*'Table'*/
+      if (state2[state2.length - 1][0] !== /*'Table'*/
       "table") break;
       csty = xlml_parsexmltag(Rn[0]);
       if (csty.Hidden) {
@@ -17683,36 +17683,36 @@ function parse_xlml_xml(d, _opts) {
     case "styles":
     case "workbook":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
-      } else state.push([Rn[3], false]);
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+      } else state2.push([Rn[3], false]);
       break;
     case "comment":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
         xlml_clean_comment(comment);
         comments.push(comment);
       } else {
-        state.push([Rn[3], false]);
+        state2.push([Rn[3], false]);
         tmp = xlml_parsexmltag(Rn[0]);
         comment = { a: tmp.Author };
       }
       break;
     case "autofilter":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
       } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") {
         var AutoFilter = xlml_parsexmltag(Rn[0]);
         cursheet["!autofilter"] = { ref: rc_to_a1(AutoFilter.Range).replace(/\$/g, "") };
-        state.push([Rn[3], true]);
+        state2.push([Rn[3], true]);
       }
       break;
     case "name":
       break;
     case "datavalidation":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
       } else {
-        if (Rn[0].charAt(Rn[0].length - 2) !== "/") state.push([Rn[3], true]);
+        if (Rn[0].charAt(Rn[0].length - 2) !== "/") state2.push([Rn[3], true]);
       }
       break;
     case "pixelsperinch":
@@ -17737,16 +17737,16 @@ function parse_xlml_xml(d, _opts) {
     case "workbookoptions":
     case "worksheetoptions":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
-      } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state.push([Rn[3], true]);
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw new Error("Bad state: " + tmp.join("|"));
+      } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state2.push([Rn[3], true]);
       break;
     case "null":
       break;
     default:
-      if (state.length == 0 && Rn[3] == "document") return parse_fods(str, opts);
-      if (state.length == 0 && Rn[3] == "uof") return parse_fods(str, opts);
+      if (state2.length == 0 && Rn[3] == "document") return parse_fods(str, opts);
+      if (state2.length == 0 && Rn[3] == "uof") return parse_fods(str, opts);
       var seen = true;
-      switch (state[state.length - 1][0]) {
+      switch (state2[state2.length - 1][0]) {
         /* OfficeDocumentSettings */
         case "officedocumentsettings":
           switch (Rn[3]) {
@@ -18444,8 +18444,8 @@ function parse_xlml_xml(d, _opts) {
       }
       if (seen) break;
       if (Rn[3].match(/!\[CDATA/)) break;
-      if (!state[state.length - 1][1]) throw "Unrecognized tag: " + Rn[3] + "|" + state.join("|");
-      if (state[state.length - 1][0] === /*'CustomDocumentProperties'*/
+      if (!state2[state2.length - 1][1]) throw "Unrecognized tag: " + Rn[3] + "|" + state2.join("|");
+      if (state2[state2.length - 1][0] === /*'CustomDocumentProperties'*/
       "customdocumentproperties") {
         if (Rn[0].slice(-2) === "/>") break;
         else if (Rn[1] === "/") xlml_set_custprop(Custprops, raw_Rn3, cp, str.slice(pidx, Rn.index));
@@ -18455,7 +18455,7 @@ function parse_xlml_xml(d, _opts) {
         }
         break;
       }
-      if (opts.WTF) throw "Unrecognized tag: " + Rn[3] + "|" + state.join("|");
+      if (opts.WTF) throw "Unrecognized tag: " + Rn[3] + "|" + state2.join("|");
   }
   var out = {};
   if (!opts.bookSheets && !opts.bookProps) out.Sheets = sheets;
@@ -20284,7 +20284,7 @@ function parse_content_xml(d, _opts) {
   var opts = _opts || {};
   if (DENSE != null && opts.dense == null) opts.dense = DENSE;
   var str = xlml_normalize(d);
-  var state = [], tmp;
+  var state2 = [], tmp;
   var tag;
   var NFtag = { name: "" }, NF = "", pidx = 0;
   var sheetag;
@@ -20546,18 +20546,18 @@ function parse_content_xml(d, _opts) {
     // 3.14 <office:font-face-decls>
     case "master-styles":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
-      } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state.push([Rn[3], true]);
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
+      } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state2.push([Rn[3], true]);
       break;
     case "annotation":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
         comment.t = textp;
         if (textR.length) comment.R = textR;
         comment.a = creator;
         comments.push(comment);
       } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") {
-        state.push([Rn[3], false]);
+        state2.push([Rn[3], false]);
       }
       creator = "";
       creatoridx = 0;
@@ -20604,8 +20604,8 @@ function parse_content_xml(d, _opts) {
     // TODO
     case "chart":
       if (Rn[1] === "/") {
-        if ((tmp = state.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
-      } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state.push([Rn[3], false]);
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
+      } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") state2.push([Rn[3], false]);
       textp = "";
       textpidx = 0;
       textR = [];
@@ -20625,11 +20625,11 @@ function parse_content_xml(d, _opts) {
     case "time-style":
       if (Rn[1] === "/") {
         number_format_map[NFtag.name] = NF;
-        if ((tmp = state.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
+        if ((tmp = state2.pop())[0] !== Rn[3]) throw "Bad state: " + tmp;
       } else if (Rn[0].charAt(Rn[0].length - 2) !== "/") {
         NF = "";
         NFtag = parsexmltag(Rn[0], false);
-        state.push([Rn[3], true]);
+        state2.push([Rn[3], true]);
       }
       break;
     case "script":
@@ -20670,7 +20670,7 @@ function parse_content_xml(d, _opts) {
       break;
     // 17.18 <style:table-cell-properties>
     case "number":
-      switch (state[state.length - 1][0]) {
+      switch (state2[state2.length - 1][0]) {
         case "time-style":
         case "date-style":
           tag = parsexmltag(Rn[0], false);
@@ -20702,7 +20702,7 @@ function parse_content_xml(d, _opts) {
     case "seconds":
     // 16.27.21 <number:seconds>
     case "am-pm":
-      switch (state[state.length - 1][0]) {
+      switch (state2[state2.length - 1][0]) {
         case "time-style":
         case "date-style":
           tag = parsexmltag(Rn[0], false);
@@ -20721,7 +20721,7 @@ function parse_content_xml(d, _opts) {
     // 16.27.25 <number:text-style>
     case "text":
       if (Rn[0].slice(-2) === "/>") break;
-      else if (Rn[1] === "/") switch (state[state.length - 1][0]) {
+      else if (Rn[1] === "/") switch (state2[state2.length - 1][0]) {
         case "number-style":
         case "date-style":
         case "time-style":
@@ -20813,7 +20813,7 @@ function parse_content_xml(d, _opts) {
     // 6.1.7 <text:span>
     case "p":
     case "\u6587\u672C\u4E32":
-      if (["master-styles"].indexOf(state[state.length - 1][0]) > -1) break;
+      if (["master-styles"].indexOf(state2[state2.length - 1][0]) > -1) break;
       if (Rn[1] === "/" && (!ctag || !ctag["string-value"])) {
         var ptp = parse_text_p(str.slice(textpidx, Rn.index), textptag);
         textp = (textp.length > 0 ? textp + "\n" : "") + ptp[0];
@@ -37882,352 +37882,8 @@ var init_xlsx = __esm({
   }
 });
 
-// src/frontend/custom-ui/project-app/main.js
-var import_bridge8 = __toESM(require_out3());
-
-// src/lib/labels.js
-var STANDUP_LABELS_SHORT = {
-  tasks: "Tasks",
-  progress: "Progress",
-  problems: "Problems"
-};
-var STANDUP_LINKED_WORK_ITEMS_TITLE = "Work item l\xE0m vi\u1EC7c h\xF4m nay";
-var STANDUP_TABLE_HEADERS = {
-  tasks: "Tasks",
-  progress: "Progress",
-  problems: "Problems"
-};
-var STANDUP_PLACEHOLDER = {
-  tasks: "Ghi r\xF5 c\xE1c task l\xE0m trong ng\xE0y",
-  progress: "Ti\u1EBFn \u0111\u1ED9 c\xF4ng vi\u1EC7c (Nhanh, ch\u1EADm, \u0111\xFAng ti\u1EBFn \u0111\u1ED9)",
-  problems: "Kh\xF4ng c\xF3"
-};
-var UI_COPY = {
-  teamSyncSubtitle: "M\u1ECDi th\xE0nh vi\xEAn c\u1EA7n b\xE1o c\xE1o \u01B0u ti\xEAn, ti\u1EBFn \u0111\u1ED9 v\xE0 v\u1EA5n \u0111\u1EC1 m\u1ED7i ng\xE0y trong bi\xEAn b\u1EA3n Team Sync.",
-  loading: "\u0110ang t\u1EA3i\u2026",
-  noProject: "M\u1EDF trang n\xE0y t\u1EEB sidebar c\u1EE7a m\u1ED9t project Jira.",
-  disabled: "App ch\u01B0a b\u1EADt cho project n\xE0y. Li\xEAn h\u1EC7 Jira admin \u0111\u1EC3 c\u1EA5u h\xECnh Team Sync."
-};
-var formatTeamSyncTitle = (sprintName) => {
-  const trimmed = (sprintName ?? "").trim();
-  return trimmed ? `${trimmed} Team Sync` : "Team Sync";
-};
-
-// src/frontend/custom-ui/project-app/views/dashboard.js
-var import_bridge3 = __toESM(require_out3());
-
-// src/lib/adf-helpers.js
-var emptyAdf = () => ({
-  version: 1,
-  type: "doc",
-  content: [{ type: "paragraph", content: [] }]
-});
-var isAdfDocument = (value) => Boolean(value && typeof value === "object" && value.type === "doc" && value.version);
-var isAdfJsonString = (value) => {
-  if (typeof value !== "string") return false;
-  const trimmed = value.trim();
-  if (!trimmed.startsWith("{")) return false;
-  try {
-    return isAdfDocument(JSON.parse(trimmed));
-  } catch {
-    return false;
-  }
-};
-var parseStandupField = (value) => {
-  if (!value) return emptyAdf();
-  if (isAdfDocument(value)) return value;
-  if (typeof value !== "string") return emptyAdf();
-  const trimmed = value.trim();
-  if (!trimmed) return emptyAdf();
-  if (isAdfJsonString(trimmed)) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (isAdfDocument(parsed)) return parsed;
-    } catch {
-    }
-  }
-  return plainTextToAdf(trimmed);
-};
-var serializeStandupField = (value) => {
-  if (!value) return "";
-  if (typeof value === "string") return value.trim();
-  if (isAdfDocument(value)) return JSON.stringify(value);
-  return "";
-};
-var plainTextToAdf = (text) => {
-  const lines = String(text ?? "").split("\n").map((line) => line.trimEnd());
-  if (!lines.length || lines.length === 1 && !lines[0]) {
-    return emptyAdf();
-  }
-  return {
-    version: 1,
-    type: "doc",
-    content: lines.map((line) => ({
-      type: "paragraph",
-      content: line ? [{ type: "text", text: line }] : []
-    }))
-  };
-};
-var walkAdfText = (nodes, parts) => {
-  for (const node of nodes ?? []) {
-    if (node.type === "text") {
-      parts.push(node.text ?? "");
-      continue;
-    }
-    if (node.type === "inlineCard" || node.type === "blockCard") {
-      const url = node.attrs?.url ?? "";
-      const keyMatch = url.match(/\/browse\/([A-Z][A-Z0-9]+-\d+)/i);
-      parts.push(keyMatch ? keyMatch[1].toUpperCase() : url);
-      continue;
-    }
-    if (node.type === "hardBreak") {
-      parts.push("\n");
-      continue;
-    }
-    if (node.content?.length) {
-      walkAdfText(node.content, parts);
-    }
-    if (node.type === "paragraph") {
-      parts.push("\n");
-    }
-  }
-};
-var adfToPlainText = (value) => {
-  const doc = isAdfDocument(value) ? value : parseStandupField(value);
-  if (!isAdfDocument(doc)) return String(value ?? "").trim();
-  const parts = [];
-  walkAdfText(doc.content, parts);
-  return parts.join("").replace(/\n{3,}/g, "\n\n").trim();
-};
-var extractPlainText = (value) => {
-  if (typeof value === "string" && isAdfJsonString(value)) {
-    return adfToPlainText(value);
-  }
-  if (isAdfDocument(value)) {
-    return adfToPlainText(value);
-  }
-  return String(value ?? "").trim();
-};
-var JIRA_BROWSE_URL_RE = /https?:\/\/[^\s>]+\/browse\/([A-Z][A-Z0-9]+-\d+)/gi;
-var JIRA_ISSUE_KEY_RE = /\b([A-Z][A-Z0-9]+-\d+)\b/g;
-var extractJiraIssueKeys = (value) => {
-  const source = extractPlainText(value);
-  const keys2 = /* @__PURE__ */ new Set();
-  let match;
-  const urlRe = new RegExp(JIRA_BROWSE_URL_RE.source, "gi");
-  while ((match = urlRe.exec(source)) !== null) {
-    keys2.add(match[1].toUpperCase());
-  }
-  const keyRe = new RegExp(JIRA_ISSUE_KEY_RE.source, "g");
-  while ((match = keyRe.exec(source)) !== null) {
-    keys2.add(match[1].toUpperCase());
-  }
-  return [...keys2];
-};
-var parseJiraLinkPaste = (text) => {
-  const items = extractJiraBrowseUrls(text);
-  const seen = new Set(items.map((item) => item.key));
-  for (const part of String(text ?? "").split(/[\n,]+/)) {
-    const trimmed = part.trim();
-    const match = trimmed.match(/^([A-Z][A-Z0-9]+-\d+)$/);
-    if (match && !seen.has(match[1])) {
-      seen.add(match[1]);
-      items.push({ key: match[1], url: "" });
-    }
-  }
-  return items;
-};
-var extractJiraBrowseUrls = (text) => {
-  const items = [];
-  const urlRe = new RegExp(JIRA_BROWSE_URL_RE.source, "gi");
-  let match;
-  while ((match = urlRe.exec(String(text ?? ""))) !== null) {
-    items.push({ url: match[0], key: match[1].toUpperCase() });
-  }
-  return items;
-};
-var stripJiraBrowseUrls = (text) => String(text ?? "").replace(new RegExp(JIRA_BROWSE_URL_RE.source, "gi"), "").replace(/[ \t]+\n/g, "\n").replace(/^\n+/, "").replace(/\n{3,}/g, "\n\n").trim();
-var ISSUE_KEY_ONLY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
-var stripJiraLinkPasteContent = (text) => {
-  const withoutUrls = stripJiraBrowseUrls(text);
-  const lines = withoutUrls.split("\n");
-  const cleaned = lines.map(
-    (line) => line.split(",").map((part) => part.trim()).filter((part) => part && !ISSUE_KEY_ONLY_RE.test(part)).join(", ").trim()
-  ).filter(Boolean);
-  return cleaned.join("\n").trim();
-};
-var parseStandupFieldParts = (value) => {
-  const doc = parseStandupField(value);
-  if (!isAdfDocument(doc)) {
-    const plain = String(value ?? "");
-    const urls = extractJiraBrowseUrls(plain);
-    return {
-      text: stripJiraBrowseUrls(plain),
-      issues: urls.map(({ key, url }) => ({ key, url }))
-    };
-  }
-  const textLines = [];
-  const issues = [];
-  for (const block of doc.content ?? []) {
-    if (block.type !== "paragraph") continue;
-    const nodes = block.content ?? [];
-    const cardNodes = nodes.filter(
-      (node) => node.type === "inlineCard" || node.type === "blockCard"
-    );
-    if (cardNodes.length) {
-      for (const node of cardNodes) {
-        const url = node.attrs?.url ?? "";
-        const keyMatch = url.match(/\/browse\/([A-Z][A-Z0-9]+-\d+)/i);
-        if (keyMatch) {
-          issues.push({ key: keyMatch[1].toUpperCase(), url });
-        }
-      }
-      continue;
-    }
-    const line = nodes.filter((node) => node.type === "text").map((node) => node.text ?? "").join("");
-    if (line.trim()) textLines.push(line);
-  }
-  return { text: textLines.join("\n"), issues };
-};
-var buildStandupAdfFromParts = (text, issues = []) => {
-  const content = [];
-  for (const issue of issues) {
-    if (issue?.url) {
-      content.push({
-        type: "paragraph",
-        content: [{ type: "inlineCard", attrs: { url: issue.url } }]
-      });
-    }
-  }
-  const lines = String(text ?? "").split("\n");
-  if (lines.length === 1 && !lines[0].trim() && !content.length) {
-    return emptyAdf();
-  }
-  for (const line of lines) {
-    content.push(paragraphFromLine(line));
-  }
-  if (!content.length) return emptyAdf();
-  return { version: 1, type: "doc", content };
-};
-var serializeStandupFieldParts = (text, issues) => serializeStandupField(buildStandupAdfFromParts(text, issues));
-var isStandupFieldEmpty = (text, issues) => !String(text ?? "").trim() && !issues?.length;
-var paragraphFromLine = (line) => {
-  const trimmed = line.trimEnd();
-  if (!trimmed) {
-    return { type: "paragraph", content: [] };
-  }
-  const content = [];
-  let lastIndex = 0;
-  const urlRe = new RegExp(JIRA_BROWSE_URL_RE.source, "gi");
-  let match;
-  while ((match = urlRe.exec(trimmed)) !== null) {
-    if (match.index > lastIndex) {
-      content.push({ type: "text", text: trimmed.slice(lastIndex, match.index) });
-    }
-    content.push({
-      type: "inlineCard",
-      attrs: { url: match[0] }
-    });
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < trimmed.length) {
-    content.push({ type: "text", text: trimmed.slice(lastIndex) });
-  }
-  if (!content.length) {
-    content.push({ type: "text", text: trimmed });
-  }
-  return { type: "paragraph", content };
-};
-var textToAdfWithSmartLinks = (text) => {
-  const lines = String(text ?? "").split("\n").map((line) => line.trimEnd());
-  if (!lines.length || lines.length === 1 && !lines[0]) {
-    return emptyAdf();
-  }
-  return {
-    version: 1,
-    type: "doc",
-    content: lines.map((line) => paragraphFromLine(line))
-  };
-};
-var serializeStandupText = (text, issues = []) => {
-  if (issues?.length) return serializeStandupFieldParts(text, issues);
-  return serializeStandupField(textToAdfWithSmartLinks(text));
-};
-
-// src/lib/dates.js
-var todayIso = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-var isoToDisplay = (iso) => {
-  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso ?? "";
-  const [year, month, day] = iso.split("-");
-  return `${day}/${month}/${year}`;
-};
-var isoToDayMonth = (iso) => {
-  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso ?? "";
-  const d = /* @__PURE__ */ new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
-};
-var addDaysIso = (iso, days2) => {
-  const d = /* @__PURE__ */ new Date(`${iso}T12:00:00.000Z`);
-  d.setUTCDate(d.getUTCDate() + days2);
-  return d.toISOString().slice(0, 10);
-};
-var mondayOfWeekIso = (referenceDate = /* @__PURE__ */ new Date()) => {
-  const d = new Date(
-    Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), referenceDate.getUTCDate())
-  );
-  const day = d.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d.toISOString().slice(0, 10);
-};
-
-// src/lib/blockers.js
-var NONE_PATTERNS = ["none", "kh\xF4ng c\xF3", "khong co", "n/a", "na", "kh\xF4ng", "khong", "no"];
-var hasActiveBlocker = (blockers, blockerResolved = false) => {
-  if (blockerResolved) return false;
-  return hadBlockerContent(blockers);
-};
-var hadBlockerContent = (blockers) => {
-  const trimmed = extractPlainText(blockers).toLowerCase();
-  if (!trimmed.length) return false;
-  return !NONE_PATTERNS.some((p) => trimmed === p || trimmed.startsWith(`${p} `));
-};
-
-// src/lib/standup-issues.js
-var normalizeKey = (key) => String(key ?? "").trim().toUpperCase();
-var groupStandupLinkedIssues = (entry) => {
-  const tasks = /* @__PURE__ */ new Set();
-  const progress = /* @__PURE__ */ new Set();
-  const problems = /* @__PURE__ */ new Set();
-  const addFromField = (field, target) => {
-    const value = entry?.[field];
-    for (const key of extractJiraIssueKeys(value)) target.add(normalizeKey(key));
-    for (const issue of parseStandupFieldParts(value).issues) {
-      target.add(normalizeKey(issue.key));
-    }
-  };
-  addFromField("yesterday", tasks);
-  addFromField("today", progress);
-  addFromField("blockers", problems);
-  const blockerIssueKey = normalizeKey(entry?.blockerIssueKey);
-  if (blockerIssueKey) problems.add(blockerIssueKey);
-  const linkedKeys = (entry?.linkedIssueKeys ?? []).map(normalizeKey).filter(Boolean);
-  for (const key of linkedKeys) {
-    if (problems.has(key)) continue;
-    if (tasks.has(key)) continue;
-    if (progress.has(key)) continue;
-    tasks.add(key);
-  }
-  for (const key of problems) {
-    tasks.delete(key);
-    progress.delete(key);
-  }
-  return {
-    tasks: [...tasks],
-    progress: [...progress],
-    problems: [...problems]
-  };
-};
+// src/frontend/custom-ui/admin-data/main.js
+var import_bridge2 = __toESM(require_out3());
 
 // src/frontend/custom-ui/project-app/shared/dom.js
 var escapeHtml = (value) => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -38238,18 +37894,6 @@ var avatarColor = (accountId) => {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h + s.charCodeAt(i)) % AVATAR_COLORS.length;
   return AVATAR_COLORS[h];
-};
-var formatTime = (iso) => {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    });
-  } catch {
-    return "";
-  }
 };
 var downloadExcelFromCsv = async (filename, csv) => {
   const XLSX2 = await Promise.resolve().then(() => (init_xlsx(), xlsx_exports));
@@ -38265,26 +37909,6 @@ var downloadExcelFromCsv = async (filename, csv) => {
 
 // src/frontend/custom-ui/project-app/shared/avatars.js
 var import_bridge = __toESM(require_out3());
-var cache = /* @__PURE__ */ new Map();
-var loadAvatars = async (accountIds = []) => {
-  const missing = [...new Set((accountIds ?? []).filter(Boolean))].filter((id) => !cache.has(id));
-  if (missing.length) {
-    try {
-      const result = await (0, import_bridge.invoke)("getUserAvatars", { accountIds: missing });
-      const avatars = result?.avatars ?? {};
-      for (const id of missing) {
-        cache.set(id, avatars[id] ?? "");
-      }
-    } catch {
-      for (const id of missing) cache.set(id, "");
-    }
-  }
-  const out = {};
-  for (const id of accountIds ?? []) {
-    if (id) out[id] = cache.get(id) ?? "";
-  }
-  return out;
-};
 var userAvatarHtml = (accountId, displayName, avatarUrl, className = "user-avatar") => {
   if (avatarUrl) {
     return `<img class="${className}" src="${escapeHtml(avatarUrl)}" alt="" width="32" height="32" loading="lazy" referrerpolicy="no-referrer" />`;
@@ -38292,1489 +37916,203 @@ var userAvatarHtml = (accountId, displayName, avatarUrl, className = "user-avata
   return `<span class="${className} entry-avatar-fallback" style="background:${avatarColor(accountId)}">${escapeHtml(memberInitials(displayName))}</span>`;
 };
 
-// src/frontend/custom-ui/project-app/shared/issues.js
-var import_bridge2 = __toESM(require_out3());
-var STATUS_CYCLE = [
-  { label: "To do", dotColor: "#626f86", category: "new" },
-  { label: "In progress", dotColor: "#378ADD", category: "indeterminate" },
-  { label: "Done", dotColor: "#639922", category: "done" }
-];
-var getStatusDisplay = (issue) => {
-  const category = issue?.statusCategory ?? "new";
-  const found = STATUS_CYCLE.find((item) => item.category === category);
-  if (found) return { ...found, label: issue?.status || found.label };
-  return { label: issue?.status || "To do", dotColor: "#626f86", category: "new" };
+// src/frontend/custom-ui/admin-data/main.js
+var root = document.getElementById("root");
+var formatDateRange = (firstDate, lastDate) => {
+  if (!firstDate) return "";
+  if (firstDate === lastDate) return firstDate;
+  return `${firstDate} \u2192 ${lastDate}`;
 };
-var getNextStatus = (category) => {
-  const index = STATUS_CYCLE.findIndex((item) => item.category === category);
-  const nextIndex = index < 0 ? 0 : (index + 1) % STATUS_CYCLE.length;
-  return STATUS_CYCLE[nextIndex];
+var state = {
+  members: [],
+  membersLoading: true,
+  loading: false,
+  error: null,
+  deleteSuccess: null,
+  confirmingId: null,
+  confirmingAll: false,
+  exportMsg: null
 };
-var enrichIssues = async (issues) => {
-  if (!issues?.length) return [];
-  const keys2 = issues.map((issue) => issue.key);
+var setState = (patch) => {
+  Object.assign(state, patch);
+  render();
+};
+var loadMembers = async () => {
+  setState({ membersLoading: true, error: null });
   try {
-    const result = await (0, import_bridge2.invoke)("enrichLinkedIssues", { issueKeys: keys2 });
-    const byKey = Object.fromEntries((result?.issues ?? []).map((issue) => [issue.key, issue]));
-    return issues.map((issue) => ({
-      ...issue,
-      summary: byKey[issue.key]?.summary ?? issue.summary ?? "",
-      status: byKey[issue.key]?.status ?? issue.status ?? "",
-      statusCategory: byKey[issue.key]?.statusCategory ?? issue.statusCategory ?? "new",
-      issueType: byKey[issue.key]?.issueType ?? issue.issueType ?? "",
-      issueTypeIconUrl: byKey[issue.key]?.issueTypeIconUrl ?? issue.issueTypeIconUrl ?? ""
-    }));
-  } catch {
-    return issues;
+    const { members } = await (0, import_bridge2.invoke)("getStandupDataMembers");
+    setState({ members: members ?? [], membersLoading: false });
+  } catch (e) {
+    setState({
+      membersLoading: false,
+      error: e?.message ?? "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c danh s\xE1ch th\xE0nh vi\xEAn."
+    });
   }
 };
-var parsePaste = (text) => {
-  const items = [];
-  const seen = /* @__PURE__ */ new Set();
-  const urlRe = /https?:\/\/[^\s>]+\/browse\/([A-Z][A-Z0-9]+-\d+)/gi;
-  let match;
-  while ((match = urlRe.exec(text)) !== null) {
-    const key = match[1].toUpperCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      items.push({ key, url: match[0] });
-    }
-  }
-  for (const part of text.split(/[\n,]+/)) {
-    const trimmed = part.trim();
-    const keyMatch = trimmed.match(/^([A-Z][A-Z0-9]+-\d+)$/);
-    if (keyMatch && !seen.has(keyMatch[1])) {
-      seen.add(keyMatch[1]);
-      items.push({ key: keyMatch[1], url: "" });
-    }
-  }
-  return items;
-};
-var issueRowHtml = (issue, options = {}) => {
-  const {
-    readonly = false,
-    index = 0,
-    lockedKeys = [],
-    enableReorder = false,
-    enableStatusChange = false,
-    problemResolved = false
-  } = options;
-  const status = getStatusDisplay(issue);
-  const locked = lockedKeys.includes(issue.key);
-  const canRemove = !readonly && !locked;
-  const dragAttrs = enableReorder ? `draggable="true" data-drag-index="${index}"` : "";
-  return `
-    <div class="row-card${problemResolved ? " row-card--resolved" : ""}" data-key="${escapeHtml(issue.key)}" data-index="${index}" role="listitem">
-      ${enableReorder ? `<span class="grip" ${dragAttrs} aria-hidden="true" title="K\xE9o \u0111\u1EC3 s\u1EAFp x\u1EBFp">\u283F</span>` : ""}
-      <a class="issue-key" href="#" data-open="${escapeHtml(issue.key)}">${escapeHtml(issue.key)}</a>
-      <span class="issue-summary issue-link" data-open="${escapeHtml(issue.key)}" title="${escapeHtml(issue.summary || "")}">${escapeHtml(issue.summary || "\u2014")}</span>
-      ${issue.issueType ? `<span class="type-badge">
-              ${issue.issueTypeIconUrl ? `<img class="type-icon" src="${escapeHtml(issue.issueTypeIconUrl)}" alt="" />` : '<span class="type-icon-fallback" aria-hidden="true">\u2611</span>'}
-              ${escapeHtml(issue.issueType)}
-            </span>` : ""}
-      ${readonly ? `<span class="status-pill${problemResolved ? " status-pill--resolved" : ""}">
-              ${problemResolved ? '<span class="resolved-dot" aria-hidden="true">\u2713</span><span>\u0110\xE3 x\u1EED l\xFD</span>' : `<span class="status-dot" style="background:${status.dotColor}"></span>
-              <span>${escapeHtml(status.label)}</span>`}
-            </span>` : `<button type="button" class="status-pill" data-status="${escapeHtml(issue.key)}" ${enableStatusChange ? "" : "disabled"}>
-              <span class="status-dot" style="background:${status.dotColor}"></span>
-              <span>${escapeHtml(status.label)}</span>
-            </button>`}
-      ${canRemove ? `<button type="button" class="btn-issue-remove" data-remove-issue="${escapeHtml(issue.key)}" title="G\u1EE1 work item">
-              <span aria-hidden="true">\u{1F5D1}</span> G\u1EE1
-            </button>` : ""}
-    </div>
-  `;
-};
-var bindIssueOpen = (root2) => {
-  root2.addEventListener("click", (event) => {
-    const openEl = event.target.closest("[data-open]");
-    if (openEl?.dataset.open) {
-      event.preventDefault();
-      import_bridge2.router.open(`/browse/${openEl.dataset.open}`);
-    }
-  });
-};
-
-// src/frontend/custom-ui/project-app/shared/work-items.js
-var workItemsSectionsHtml = (entry, labels = STANDUP_LABELS_SHORT) => {
-  const groups = entry.issueGroups ?? { tasks: [], progress: [], problems: [] };
-  const byKey = Object.fromEntries((entry.issues ?? []).map((issue) => [issue.key, issue]));
-  const blockerIssueKey = String(entry.blockerIssueKey ?? "").trim().toUpperCase();
-  const problemResolved = Boolean(entry.blockerResolved);
-  const section = (variant, labelText, keys2) => {
-    if (!keys2?.length) return "";
-    const issues = keys2.map((key) => byKey[key]).filter(Boolean);
-    if (!issues.length) return "";
-    const resolvedNote = variant === "problems" && problemResolved ? '<p class="work-items-resolved-note">V\u1EA5n \u0111\u1EC1 \u0111\xE3 \u0111\u01B0\u1EE3c \u0111\xE1nh d\u1EA5u x\u1EED l\xFD</p>' : "";
-    const titleHtml = `<p class="work-items-title">Work item \u2014 <span class="work-items-label work-items-label--${variant}">${escapeHtml(labelText)}</span>${variant === "problems" && problemResolved ? ' <span class="resolved-badge">\u0110\xE3 x\u1EED l\xFD</span>' : ""}</p>`;
-    const headerHtml = variant === "problems" ? `<div class="work-items-header-card work-items-header-card--problems${problemResolved ? " work-items-header-card--resolved" : ""}">${titleHtml}${resolvedNote}</div>` : `${titleHtml}${resolvedNote}`;
-    return `
-      <section class="work-items-section work-items-section--${variant}${variant === "problems" && problemResolved ? " work-items-section--resolved" : ""}">
-        ${headerHtml}
-        <div class="backlog-panel">
-          <div class="issue-list" role="list">
-            ${issues.map(
-      (issue) => issueRowHtml(issue, {
-        readonly: true,
-        problemResolved: variant === "problems" && problemResolved && (issue.key.toUpperCase() === blockerIssueKey || !blockerIssueKey)
-      })
-    ).join("")}
-          </div>
-        </div>
-      </section>
-    `;
-  };
-  return [
-    section("tasks", labels.tasks, groups.tasks),
-    section("progress", labels.progress, groups.progress),
-    section("problems", labels.problems, groups.problems)
-  ].join("");
-};
-
-// src/frontend/custom-ui/project-app/shared/progress.js
-var clampPercent = (value) => Math.min(100, Math.max(0, Math.round(Number(value) || 0)));
-var progressBarHtml = (value, { variant = "plan", size = "" } = {}) => {
-  const pct = clampPercent(value);
-  const sizeClass = size ? ` progress-bar--${size}` : "";
-  return `
-    <div class="progress-bar${sizeClass}" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
-      <div class="progress-bar-fill progress-bar-fill--${variant}" style="width:${pct}%"></div>
-    </div>
-  `;
-};
-var progressStatCardHtml = ({ label, value, sub, variant = "plan" }) => {
-  const pct = clampPercent(value);
-  return `
-    <article class="stat-card">
-      <div class="stat-card-header">
-        <span class="stat-label">${escapeHtml(label)}</span>
-        <span class="stat-value">${pct}%</span>
-      </div>
-      ${progressBarHtml(pct, { variant })}
-      ${sub ? `<p class="stat-sub">${escapeHtml(sub)}</p>` : ""}
-    </article>
-  `;
-};
-var metricStatCardHtml = ({ label, value, sub, danger = false }) => `
-  <article class="stat-card stat-card--metric">
-    <span class="stat-label">${escapeHtml(label)}</span>
-    <span class="stat-metric${danger ? " stat-metric--danger" : ""}">${escapeHtml(String(value))}</span>
-    ${sub ? `<p class="stat-sub">${escapeHtml(sub)}</p>` : ""}
-  </article>
-`;
-var dashboardStatsHtml = (stats) => {
-  const today = stats?.completionToday ?? { logged: 0, total: 0, pending: 0 };
-  const todayPct = today.total ? today.logged / today.total * 100 : 0;
-  const sprintPct = stats?.sprintCompletion ?? 0;
-  const blockers = stats?.activeBlockers ?? 0;
-  const stale = stats?.staleBlockers ?? 0;
-  const todayVariant = todayPct >= 100 ? "success" : todayPct >= 50 ? "plan" : "neutral";
-  const sprintVariant = sprintPct >= 80 ? "success" : sprintPct >= 50 ? "plan" : "neutral";
-  return `
-    <section class="section dashboard-stats">
-      <div class="stats-grid">
-        ${progressStatCardHtml({
-    label: "Team Sync h\xF4m nay",
-    value: todayPct,
-    sub: today.total > 0 ? `${today.logged}/${today.total} th\xE0nh vi\xEAn \u0111\xE3 ghi${today.pending ? ` \xB7 c\xF2n ${today.pending}` : ""}` : "Ch\u01B0a c\xF3 th\xE0nh vi\xEAn trong team",
-    variant: todayVariant
-  })}
-        ${progressStatCardHtml({
-    label: "Ti\u1EBFn \u0111\u1ED9 sprint (2 tu\u1EA7n)",
-    value: sprintPct,
-    sub: "T\u1EF7 l\u1EC7 ghi Team Sync c\xE1c ng\xE0y l\xE0m vi\u1EC7c",
-    variant: sprintVariant
-  })}
-        ${metricStatCardHtml({
-    label: "V\u1EA5n \u0111\u1EC1 \u0111ang m\u1EDF",
-    value: blockers,
-    sub: stale > 0 ? `${stale} qu\xE1 h\u1EA1n c\u1EA7n x\u1EED l\xFD` : "Kh\xF4ng c\xF3 v\u1EA5n \u0111\u1EC1 qu\xE1 h\u1EA1n",
-    danger: blockers > 0
-  })}
-      </div>
-    </section>
-  `;
-};
-
-// src/frontend/custom-ui/project-app/views/dashboard.js
-var ageLabel = (blocker) => {
-  if (blocker.isToday) return "H\xF4m nay";
-  if (blocker.ageDays === 1) return "H\xF4m qua";
-  return `${blocker.ageDays} ng\xE0y tr\u01B0\u1EDBc`;
-};
-var openBlockerCardHtml = (blocker, canAdminister, avatars) => {
-  const text = extractPlainText(blocker.blockers);
-  const statusClass = blocker.isStale ? "is-stale" : blocker.isToday ? "is-new" : "is-open";
-  const ageBadge = blocker.isStale ? '<span class="blocker-badge blocker-badge--stale">Qu\xE1 h\u1EA1n</span>' : blocker.isToday ? '<span class="blocker-badge blocker-badge--new">M\u1EDBi</span>' : `<span class="blocker-badge blocker-badge--age">${escapeHtml(ageLabel(blocker))}</span>`;
-  const typeBadge = blocker.typeLabel ? `<span class="blocker-badge blocker-badge--type">${escapeHtml(blocker.typeLabel)}</span>` : "";
-  const issueKeys = (blocker.linkedIssueKeys ?? []).map(
-    (key) => `<button type="button" class="issue-pill" data-open="${escapeHtml(key)}">${escapeHtml(key)}</button>`
-  ).join("");
-  return `
-    <article class="blocker-card ${statusClass}" data-blocker-key="${escapeHtml(blocker.key)}">
-      <div class="blocker-card-accent" aria-hidden="true"></div>
-      <div class="blocker-card-body">
-        <div class="blocker-card-top">
-          <div class="blocker-card-badges">${ageBadge}${typeBadge}</div>
-          <p class="blocker-card-text">${escapeHtml(text)}</p>
-          ${issueKeys ? `<div class="blocker-card-issues">${issueKeys}</div>` : ""}
-        </div>
-        <div class="blocker-card-divider" aria-hidden="true"></div>
-        <div class="blocker-card-bottom">
-          <div class="blocker-card-meta">
-            ${userAvatarHtml(blocker.accountId, blocker.displayName, avatars?.[blocker.accountId] ?? "", "entry-avatar")}
-            <div class="blocker-card-meta-text">
-              <span class="blocker-card-author">${escapeHtml(blocker.displayName)}</span>
-              <span class="blocker-card-date">${escapeHtml(isoToDisplay(blocker.date))} \xB7 ${escapeHtml(ageLabel(blocker))}</span>
-            </div>
-          </div>
-          ${canAdminister ? `<button type="button" class="btn btn-resolve-compact" data-resolve-blocker="${escapeHtml(blocker.key)}">\u0110\xE1nh d\u1EA5u \u0111\xE3 x\u1EED l\xFD</button>` : ""}
-        </div>
-      </div>
-    </article>
-  `;
-};
-var openBlockersSectionHtml = (blockers, summary, canAdminister, avatars) => {
-  if (!blockers.length) return "";
-  const staleHint = (summary?.stale ?? 0) > 0 ? `<div class="alert alert-warning"><p><strong>C\xF3 ${summary.stale} v\u1EA5n \u0111\u1EC1 qu\xE1 h\u1EA1n</strong> \u2014 n\xEAn th\u1EA3o lu\u1EADn trong bu\u1ED5i Team Sync ho\u1EB7c \u0111\xE1nh d\u1EA5u \u0111\xE3 x\u1EED l\xFD.</p></div>` : "";
-  return `
-    <section class="section open-blockers-section" id="open-blockers">
-      <div class="section-header">
-        <div>
-          <h3 class="section-title">V\u1EA5n \u0111\u1EC1 \u0111ang m\u1EDF</h3>
-          <p class="section-filter-hint">${blockers.length} v\u1EA5n \u0111\u1EC1 ch\u01B0a x\u1EED l\xFD${summary?.stale ? ` \xB7 ${summary.stale} qu\xE1 h\u1EA1n` : ""}</p>
-        </div>
-      </div>
-      ${staleHint}
-      <div class="blocker-list">
-        ${blockers.map((b) => openBlockerCardHtml(b, canAdminister, avatars)).join("")}
-      </div>
-      ${!canAdminister ? '<p class="section-filter-hint">Ch\u1EC9 project admin m\u1EDBi \u0111\xE1nh d\u1EA5u v\u1EA5n \u0111\u1EC1 \u0111\xE3 x\u1EED l\xFD.</p>' : ""}
-    </section>
-  `;
-};
-var adminHintHtml = (permissions) => {
-  const canAdmin = permissions?.canAdministerProject;
-  const isJiraAdmin = permissions?.isJiraAdmin;
-  if (!canAdmin && !isJiraAdmin) return "";
-  const parts = [];
-  if (canAdmin) {
-    parts.push(
-      "Qu\u1EA3n tr\u1ECB project: \u0111\xE1nh d\u1EA5u x\u1EED l\xFD v\u1EA5n \u0111\u1EC1 t\u1EA1i m\u1EE5c <strong>V\u1EA5n \u0111\u1EC1 \u0111ang m\u1EDF</strong>; c\u1EA5u h\xECnh t\u1EA1i <strong>Project settings \u2192 Apps \u2192 Team Sync</strong>."
-    );
-  }
-  if (isJiraAdmin) {
-    parts.push(
-      "Jira admin: c\xE0i \u0111\u1EB7t to\xE0n site v\xE0 xu\u1EA5t d\u1EEF li\u1EC7u t\u1EA1i <strong>Jira settings \u2192 Apps \u2192 Team Sync</strong>."
-    );
-  }
-  return `<div class="alert alert-info admin-hint"><p>${parts.join(" ")}</p></div>`;
-};
-var statusCardHtml = (variant, label, text, { resolved = false, resolution = "" } = {}) => {
-  if (!text?.trim()) return "";
-  const resolvedBadge = resolved ? '<span class="resolved-badge" title="V\u1EA5n \u0111\u1EC1 \u0111\xE3 \u0111\u01B0\u1EE3c \u0111\xE1nh d\u1EA5u x\u1EED l\xFD">\u0110\xE3 x\u1EED l\xFD</span>' : "";
-  const resolutionHtml = resolved && resolution?.trim() ? `<p class="resolution-note"><span class="resolution-label">Ph\u01B0\u01A1ng \xE1n:</span> ${escapeHtml(resolution)}</p>` : "";
-  return `
-    <div class="status-card status-card--${variant}${resolved ? " status-card--problems-resolved" : ""}">
-      <span class="status-label">${escapeHtml(label)}${resolvedBadge}</span>
-      <p class="status-text">${escapeHtml(text)}</p>
-      ${resolutionHtml}
-    </div>
-  `;
-};
-var entryCardHtml = (entry, labels, canAdminister, avatars) => {
-  const time = formatTime(entry.createdAt);
-  const statusCards = [
-    statusCardHtml("tasks", labels.tasks, entry.yesterday),
-    statusCardHtml("progress", labels.progress, entry.today),
-    entry.hasBlocker ? statusCardHtml("problems", labels.problems, entry.blockers) : entry.blockerResolved && hadBlockerContent(entry.blockers) ? statusCardHtml("problems", labels.problems, entry.blockers, {
-      resolved: true,
-      resolution: entry.blockerResolution ?? ""
-    }) : ""
-  ].filter(Boolean);
-  const avatarUrl = avatars?.[entry.accountId] ?? entry.avatarUrl ?? "";
-  const workItemsHtml = workItemsSectionsHtml(entry, labels);
-  return `
-    <article class="entry-card" data-account-id="${escapeHtml(entry.accountId)}">
-      <header class="entry-header">
-        <div class="entry-header-main">
-          ${userAvatarHtml(entry.accountId, entry.displayName, avatarUrl, "entry-avatar")}
-          <span class="entry-name">${escapeHtml(entry.displayName)}</span>
-        </div>
-        ${time ? `<time class="entry-time">${escapeHtml(time)}</time>` : ""}
-      </header>
-      <div class="status-panel">
-        ${statusCards.length ? `<div class="status-grid">${statusCards.join("")}</div>` : '<p class="status-empty">Ch\u01B0a c\xF3 n\u1ED9i dung.</p>'}
-      </div>
-      ${workItemsHtml}
-      ${entry.hasBlocker && canAdminister ? `<button type="button" class="btn-resolve" data-resolve="${escapeHtml(entry.accountId)}">\u0110\xE1nh d\u1EA5u \u0111\xE3 x\u1EED l\xFD v\u1EA5n \u0111\u1EC1</button>` : ""}
-    </article>
-  `;
-};
-var resolveModalHtml = (target) => `
-  <div class="modal-backdrop" data-resolve-modal role="presentation">
-    <div class="modal-dialog" role="dialog" aria-modal="true">
-      <div class="modal-header">
-        <h4 class="modal-title">Ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt v\u1EA5n \u0111\u1EC1</h4>
-        <button type="button" class="modal-close" data-close-resolve aria-label="\u0110\xF3ng">\xD7</button>
-      </div>
-      <div class="modal-body">
-        <p class="panel-label">Th\xE0nh vi\xEAn</p>
-        <p class="modal-member">${escapeHtml(target.displayName)}</p>
-        <p class="panel-label">V\u1EA5n \u0111\u1EC1</p>
-        <p class="modal-blocker">${escapeHtml(extractPlainText(target.blockers))}</p>
-        <label class="panel-label" for="resolution-plan">Ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt</label>
-        <textarea id="resolution-plan" class="paste-input" rows="4" placeholder="M\xF4 t\u1EA3 c\xE1ch team x\u1EED l\xFD kh\xF3 kh\u0103n n\xE0y\u2026"></textarea>
-        <p class="error resolve-error" hidden></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn" data-close-resolve>H\u1EE7y</button>
-        <button type="button" class="btn btn-primary" data-save-resolve>L\u01B0u v\xE0 \u0111\xE1nh d\u1EA5u \u0111\xE3 x\u1EED l\xFD</button>
-      </div>
-    </div>
-  </div>
-`;
-async function renderDashboard(container, ctx2) {
-  const { projectKey, memberFilter, onNavigateLog } = ctx2;
-  container.innerHTML = `<div class="page-loading">\u0110ang t\u1EA3i t\u1ED5ng quan team\u2026</div>`;
-  let data;
+var handleExportExcel = async () => {
+  setState({ loading: true, error: null, exportMsg: null });
   try {
-    data = await (0, import_bridge3.invoke)("getProjectDashboard", {
-      projectKey,
-      memberAccountId: memberFilter || null
+    const payload = await (0, import_bridge2.invoke)("exportStandupData");
+    await downloadExcelFromCsv(payload.filename, payload.csv ?? "");
+    setState({
+      loading: false,
+      exportMsg: `\u0110\xE3 t\u1EA3i ${payload.filename} (${payload.entryCount} b\u1EA3n ghi).`
     });
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error">${escapeHtml(e?.message ?? "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c t\u1ED5ng quan team.")}</div>`;
-    return;
+    setState({
+      loading: false,
+      error: e?.message ?? "Kh\xF4ng xu\u1EA5t \u0111\u01B0\u1EE3c file Excel."
+    });
   }
-  const timeline = data?.timeline ?? [];
-  const members = data?.members ?? [];
-  const canAdminister = data?.permissions?.canAdministerProject ?? false;
-  const canExport = data?.permissions?.isJiraAdmin ?? false;
-  const todayLabel = isoToDayMonth(data?.today);
-  const labels = STANDUP_LABELS_SHORT;
-  const avatars = {
-    ...data?.avatars ?? {},
-    ...Object.fromEntries((data?.members ?? []).map((m) => [m.accountId, m.avatarUrl ?? ""]))
-  };
-  const enrichedTimeline = await Promise.all(
-    timeline.map(async (entry) => {
-      const issueGroups = groupStandupLinkedIssues(entry);
-      const allKeys = [
-        .../* @__PURE__ */ new Set([...issueGroups.tasks, ...issueGroups.progress, ...issueGroups.problems])
-      ];
-      const normalized = {
-        ...entry,
-        yesterday: extractPlainText(entry.yesterday),
-        today: extractPlainText(entry.today),
-        blockers: extractPlainText(entry.blockers),
-        issueGroups
-      };
-      if (!allKeys.length) return { ...normalized, issues: [] };
-      const issues = await enrichIssues(allKeys.map((key) => ({ key, url: "" })));
-      return { ...normalized, issues };
-    })
-  );
-  const filteredMember = members.find((m) => m.accountId === ctx2.memberFilter);
-  const activeBlockers = (data?.activeBlockers ?? []).filter((b) => !ctx2.memberFilter || b.accountId === ctx2.memberFilter).map((b) => ({
-    ...b,
-    blockers: extractPlainText(b.blockers)
-  }));
-  const blockerSummary = {
-    total: activeBlockers.length,
-    today: activeBlockers.filter((b) => b.isToday).length,
-    stale: activeBlockers.filter((b) => b.isStale).length
-  };
-  container.innerHTML = `
-    <div class="page dashboard-page">
+};
+var handleDeleteMember = async (member) => {
+  setState({ loading: true, error: null, deleteSuccess: null });
+  try {
+    const result = await (0, import_bridge2.invoke)("purgeMemberStandupData", { accountId: member.accountId });
+    setState({
+      loading: false,
+      members: state.members.filter((m) => m.accountId !== member.accountId),
+      confirmingId: null,
+      deleteSuccess: {
+        displayName: member.displayName,
+        deleted: result.deleted
+      }
+    });
+  } catch (e) {
+    setState({
+      loading: false,
+      error: e?.message ?? "Kh\xF4ng x\xF3a \u0111\u01B0\u1EE3c d\u1EEF li\u1EC7u th\xE0nh vi\xEAn."
+    });
+  }
+};
+var handleDeleteAll = async () => {
+  setState({ loading: true, error: null, deleteSuccess: null });
+  try {
+    const result = await (0, import_bridge2.invoke)("purgeStandupData", {
+      confirm: "DELETE_ALL_STANDUP_DATA"
+    });
+    setState({
+      loading: false,
+      members: [],
+      confirmingAll: false,
+      confirmingId: null,
+      deleteSuccess: {
+        displayName: "to\xE0n b\u1ED9 d\u1EEF li\u1EC7u Team Sync",
+        deleted: result.deleted
+      }
+    });
+  } catch (e) {
+    setState({
+      loading: false,
+      error: e?.message ?? "Kh\xF4ng x\xF3a \u0111\u01B0\u1EE3c to\xE0n b\u1ED9 d\u1EEF li\u1EC7u."
+    });
+  }
+};
+var memberRowHtml = (member) => {
+  const isConfirming = state.confirmingId === member.accountId;
+  const isDeleting = state.loading && isConfirming;
+  return `
+    <article class="member-row" data-account-id="${escapeHtml(member.accountId)}">
+      <div class="member-row-main">
+        <div class="member-row-info">
+          ${userAvatarHtml(member.accountId, member.displayName, member.avatarUrl ?? "", "member-row-avatar")}
+          <div>
+            <p class="member-row-name">${escapeHtml(member.displayName)}</p>
+            <p class="member-row-meta">${member.entryCount} b\u1EA3n ghi \xB7 ${escapeHtml(member.projectKeys?.join(", ") || "\u2014")}</p>
+            <p class="member-row-meta">${escapeHtml(formatDateRange(member.firstDate, member.lastDate))}</p>
+          </div>
+        </div>
+        ${!isConfirming ? `<button type="button" class="btn btn-danger" data-request-delete="${escapeHtml(member.accountId)}">X\xF3a d\u1EEF li\u1EC7u</button>` : ""}
+      </div>
+      ${isConfirming ? `<div class="alert alert-warning">
+              <p>X\xF3a to\xE0n b\u1ED9 ${member.entryCount} b\u1EA3n ghi c\u1EE7a <strong>${escapeHtml(member.displayName)}</strong>?</p>
+              <div class="row-actions">
+                <button type="button" class="btn btn-danger" data-confirm-delete="${escapeHtml(member.accountId)}" ${isDeleting ? "disabled" : ""}>
+                  ${isDeleting ? "\u0110ang x\xF3a\u2026" : "X\xE1c nh\u1EADn x\xF3a"}
+                </button>
+                <button type="button" class="btn" data-cancel-delete ${isDeleting ? "disabled" : ""}>H\u1EE7y</button>
+              </div>
+            </div>` : ""}
+    </article>
+  `;
+};
+var render = () => {
+  if (!root) return;
+  root.innerHTML = `
+    <div class="page admin-data-page">
       <header class="page-header">
         <div>
-          <h2 class="page-title">${escapeHtml(ctx2.pageTitle)}</h2>
-          <p class="page-subtitle">Team ${escapeHtml(projectKey)} \xB7 ${escapeHtml(ctx2.teamSyncSubtitle)}</p>
-        </div>
-        <div class="page-actions">
-          ${canExport ? '<button type="button" class="btn" id="export-data">T\u1EA3i file Excel</button>' : ""}
-          <button type="button" class="btn btn-primary" id="go-log">Ghi Team Sync c\u1EE7a t\xF4i</button>
+          <h2 class="page-title">D\u1EEF li\u1EC7u &amp; quy\u1EC1n ri\xEAng t\u01B0</h2>
+          <p class="page-subtitle">Ch\u1EC9 Jira administrator m\u1EDBi truy c\u1EADp \u0111\u01B0\u1EE3c trang n\xE0y.</p>
         </div>
       </header>
 
-      ${adminHintHtml(data?.permissions)}
-
-      ${dashboardStatsHtml(data?.stats)}
-
-      ${openBlockersSectionHtml(activeBlockers, blockerSummary, canAdminister, avatars)}
-
-      ${members.length ? `<section class="section">
-              <div class="section-header">
-                <div>
-                  <h3 class="section-title">Th\xE0nh vi\xEAn team</h3>
-                  ${filteredMember ? `<p class="section-filter-hint">\u0110ang l\u1ECDc: <strong>${escapeHtml(filteredMember.displayName)}</strong></p>` : ""}
-                </div>
-                ${ctx2.memberFilter ? '<button type="button" class="btn" id="clear-member-filter">X\xF3a b\u1ED9 l\u1ECDc</button>' : ""}
-              </div>
-              <div class="member-grid">
-                ${members.map((m) => {
-    const isMe = data?.accountId && m.accountId === data.accountId;
-    return `
-                  <button type="button" class="member-card${ctx2.memberFilter === m.accountId ? " is-selected" : ""}${isMe ? " is-me" : ""}" data-member="${escapeHtml(m.accountId)}">
-                    ${userAvatarHtml(m.accountId, m.displayName, m.avatarUrl ?? avatars[m.accountId] ?? "", "member-card-avatar")}
-                    <span class="member-card-name">${escapeHtml(m.displayName)}${isMe ? ' <span class="member-you-badge">B\u1EA1n</span>' : ""}</span>
-                    <div class="member-sync-progress">
-                      ${progressBarHtml(m.loggedToday ? 100 : 0, {
-      variant: m.loggedToday ? "success" : "neutral",
-      size: "sm"
-    })}
-                      <span class="member-card-status${m.loggedToday ? " is-done" : " is-pending"}">${m.loggedToday ? "\u0110\xE3 ghi h\xF4m nay" : "Ch\u01B0a ghi"}</span>
-                    </div>
-                  </button>`;
-  }).join("")}
-              </div>
-            </section>` : ""}
+      ${state.error ? `<div class="alert alert-error"><p>${escapeHtml(state.error)}</p></div>` : ""}
+      ${state.deleteSuccess ? `<div class="alert alert-success"><p>\u0110\xE3 x\xF3a ${state.deleteSuccess.deleted} b\u1EA3n ghi c\u1EE7a ${escapeHtml(state.deleteSuccess.displayName)}.</p></div>` : ""}
+      ${state.exportMsg ? `<div class="alert alert-success"><p>${escapeHtml(state.exportMsg)}</p></div>` : ""}
 
       <section class="section">
-        <div class="section-header">
-          <h3 class="section-title">Team Sync h\xF4m nay${todayLabel ? ` \xB7 ${escapeHtml(todayLabel)}` : ""}</h3>
-          ${ctx2.memberFilter ? '<button type="button" class="btn" id="clear-member-filter-timeline">X\xF3a b\u1ED9 l\u1ECDc</button>' : ""}
-        </div>
-        ${enrichedTimeline.length === 0 ? `<div class="empty-state">
-                <h4>Ch\u01B0a c\xF3 ai ghi Team Sync h\xF4m nay</h4>
-                <p>B\u1EAFt \u0111\u1EA7u bu\u1ED5i sync b\u1EB1ng c\xE1ch ghi Tasks, Progress v\xE0 Problems \u2014 m\u1EA5t kho\u1EA3ng 2 ph\xFAt.</p>
-                <button type="button" class="btn btn-primary" id="go-log-empty">Ghi Team Sync c\u1EE7a t\xF4i</button>
-              </div>` : `<div class="timeline">${enrichedTimeline.map((entry) => entryCardHtml(entry, labels, canAdminister, avatars)).join("")}</div>`}
+        <h3 class="section-title">Th\xE0nh vi\xEAn c\xF3 d\u1EEF li\u1EC7u</h3>
+        <p class="section-filter-hint">X\xF3a d\u1EEF li\u1EC7u theo t\u1EEBng th\xE0nh vi\xEAn tr\xEAn m\u1ECDi project.</p>
+        ${state.membersLoading ? '<div class="page-loading">\u0110ang t\u1EA3i danh s\xE1ch th\xE0nh vi\xEAn\u2026</div>' : state.members.length === 0 ? '<div class="alert alert-info"><p>Ch\u01B0a c\xF3 th\xE0nh vi\xEAn n\xE0o c\xF3 d\u1EEF li\u1EC7u Team Sync.</p></div>' : `<div class="member-rows">${state.members.map(memberRowHtml).join("")}</div>`}
       </section>
-      <div id="resolve-modal-slot"></div>
-    </div>
-  `;
-  bindIssueOpen(container);
-  container.querySelector("#go-log")?.addEventListener("click", onNavigateLog);
-  container.querySelector("#go-log-empty")?.addEventListener("click", onNavigateLog);
-  container.querySelector("#export-data")?.addEventListener("click", async () => {
-    try {
-      const payload = await (0, import_bridge3.invoke)("exportStandupData");
-      await downloadExcelFromCsv(payload.filename ?? "team-sync-export.xlsx", payload.csv ?? "");
-    } catch (e) {
-      alert(e?.message ?? "Kh\xF4ng xu\u1EA5t \u0111\u01B0\u1EE3c file Excel.");
-    }
-  });
-  container.querySelectorAll("[data-member]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.member;
-      ctx2.setMemberFilter(ctx2.memberFilter === id ? "" : id);
-    });
-  });
-  const clearFilter = () => ctx2.setMemberFilter("");
-  container.querySelector("#clear-member-filter")?.addEventListener("click", clearFilter);
-  container.querySelector("#clear-member-filter-timeline")?.addEventListener("click", clearFilter);
-  const modalSlot = container.querySelector("#resolve-modal-slot");
-  const openResolveModal = (target) => {
-    if (!target || !modalSlot) return;
-    modalSlot.innerHTML = resolveModalHtml(target);
-    const close = () => {
-      modalSlot.innerHTML = "";
-    };
-    modalSlot.querySelectorAll("[data-close-resolve]").forEach((el) => {
-      el.addEventListener("click", close);
-    });
-    modalSlot.querySelector("[data-save-resolve]")?.addEventListener("click", async () => {
-      const plan = modalSlot.querySelector("#resolution-plan")?.value?.trim() ?? "";
-      const errEl = modalSlot.querySelector(".resolve-error");
-      if (plan.length < 3) {
-        if (errEl) {
-          errEl.textContent = "Ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt ph\u1EA3i c\xF3 \xEDt nh\u1EA5t 3 k\xFD t\u1EF1.";
-          errEl.hidden = false;
-        }
-        return;
-      }
-      try {
-        await (0, import_bridge3.invoke)("resolveBlocker", {
-          projectKey,
-          date: target.date,
-          accountId: target.accountId,
-          resolutionPlan: plan
-        });
-        close();
-        await renderDashboard(container, ctx2);
-      } catch (e) {
-        if (errEl) {
-          errEl.textContent = e?.message ?? "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c ph\u01B0\u01A1ng \xE1n gi\u1EA3i quy\u1EBFt.";
-          errEl.hidden = false;
-        }
-      }
-    });
-  };
-  container.querySelectorAll("[data-resolve]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const entry = enrichedTimeline.find((e) => e.accountId === btn.dataset.resolve);
-      if (!entry) return;
-      openResolveModal({
-        accountId: entry.accountId,
-        displayName: entry.displayName,
-        blockers: entry.blockers,
-        date: data.today
-      });
-    });
-  });
-  container.querySelectorAll("[data-resolve-blocker]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const blocker = activeBlockers.find((b) => b.key === btn.dataset.resolveBlocker);
-      if (!blocker) return;
-      openResolveModal({
-        accountId: blocker.accountId,
-        displayName: blocker.displayName,
-        blockers: blocker.blockers,
-        date: blocker.date
-      });
-    });
-  });
-}
 
-// src/frontend/custom-ui/project-app/views/history.js
-var import_bridge4 = __toESM(require_out3());
-var statusCardHtml2 = (variant, label, text, { resolved = false, resolution = "" } = {}) => {
-  if (!text?.trim()) return "";
-  const resolvedBadge = resolved ? '<span class="resolved-badge" title="V\u1EA5n \u0111\u1EC1 \u0111\xE3 \u0111\u01B0\u1EE3c \u0111\xE1nh d\u1EA5u x\u1EED l\xFD">\u0110\xE3 x\u1EED l\xFD</span>' : "";
-  const resolutionHtml = resolved && resolution?.trim() ? `<p class="resolution-note"><span class="resolution-label">Ph\u01B0\u01A1ng \xE1n:</span> ${escapeHtml(resolution)}</p>` : "";
-  return `
-    <div class="status-card status-card--${variant}${resolved ? " status-card--problems-resolved" : ""}">
-      <span class="status-label">${escapeHtml(label)}${resolvedBadge}</span>
-      <p class="status-text">${escapeHtml(text)}</p>
-      ${resolutionHtml}
-    </div>
-  `;
-};
-var historyEntryHtml = (entry, labels, avatars) => {
-  const time = formatTime(entry.createdAt);
-  const yesterday = extractPlainText(entry.yesterday);
-  const today = extractPlainText(entry.today);
-  const blockers = extractPlainText(entry.blockers);
-  const hasBlocker = hasActiveBlocker(entry.blockers, entry.blockerResolved);
-  const issueGroups = groupStandupLinkedIssues(entry);
-  return `
-    <article class="entry-card history-entry">
-      <header class="entry-header">
-        <div class="entry-header-main">
-          ${userAvatarHtml(entry.accountId, entry.displayName, avatars[entry.accountId] ?? "", "entry-avatar")}
-          <span class="entry-name">${escapeHtml(entry.displayName)}</span>
-        </div>
-        <time class="entry-time">${escapeHtml(time || entry.dateDisplay || "")}</time>
-      </header>
-      <div class="status-panel">
-        <div class="status-grid">
-          ${yesterday ? statusCardHtml2("tasks", labels.tasks, yesterday) : ""}
-          ${today ? statusCardHtml2("progress", labels.progress, today) : ""}
-          ${hasBlocker ? statusCardHtml2("problems", labels.problems, blockers) : entry.blockerResolved && hadBlockerContent(entry.blockers) ? statusCardHtml2("problems", labels.problems, blockers, {
-    resolved: true,
-    resolution: entry.blockerResolution ?? ""
-  }) : ""}
-        </div>
-      </div>
-      <div class="history-issues"
-           data-tasks="${escapeHtml(issueGroups.tasks.join(","))}"
-           data-progress="${escapeHtml(issueGroups.progress.join(","))}"
-           data-problems="${escapeHtml(issueGroups.problems.join(","))}"
-           data-blocker-resolved="${entry.blockerResolved ? "1" : "0"}"
-           data-blocker-issue-key="${escapeHtml(entry.blockerIssueKey ?? "")}"></div>
-    </article>
-  `;
-};
-async function renderHistory(container, ctx2) {
-  const { projectKey, sprintName } = ctx2;
-  if (!ctx2.historyFrom) ctx2.historyFrom = addDaysIso(todayIso(), -14);
-  if (!ctx2.historyTo) ctx2.historyTo = todayIso();
-  container.innerHTML = `
-    <div class="page history-page">
-      <header class="page-header">
-        <div>
-          <h2 class="page-title">L\u1ECBch s\u1EED \xB7 ${escapeHtml(formatTeamSyncTitle(sprintName))}</h2>
-          <p class="page-subtitle">Xem l\u1EA1i c\xE1c b\u1EA3n ghi Team Sync theo kho\u1EA3ng ng\xE0y.</p>
-        </div>
-      </header>
-      <div class="filter-card">
-        <div class="filter-row">
-          <label>T\u1EEB ng\xE0y <input type="date" id="from-date" value="${escapeHtml(ctx2.historyFrom)}" /></label>
-          <label>\u0110\u1EBFn ng\xE0y <input type="date" id="to-date" value="${escapeHtml(ctx2.historyTo)}" /></label>
-          <button type="button" class="btn btn-primary" id="apply-history">\xC1p d\u1EE5ng</button>
-        </div>
-      </div>
-      <div id="history-content"><div class="page-loading">\u0110ang t\u1EA3i l\u1ECBch s\u1EED\u2026</div></div>
-    </div>
-  `;
-  const load = async () => {
-    const content = container.querySelector("#history-content");
-    if (!content) return;
-    content.innerHTML = '<div class="page-loading">\u0110ang t\u1EA3i l\u1ECBch s\u1EED\u2026</div>';
-    try {
-      const result = await (0, import_bridge4.invoke)("getTeamHistory", {
-        projectKey,
-        fromDate: ctx2.historyFrom,
-        toDate: ctx2.historyTo
-      });
-      const entries = result?.entries ?? [];
-      if (!entries.length) {
-        content.innerHTML = `<div class="empty-state"><h4>Ch\u01B0a c\xF3 b\u1EA3n ghi</h4><p>Th\u1EED ch\u1ECDn kho\u1EA3ng ng\xE0y r\u1ED9ng h\u01A1n.</p></div>`;
-        return;
-      }
-      const grouped = /* @__PURE__ */ new Map();
-      for (const entry of entries) {
-        if (!grouped.has(entry.date)) grouped.set(entry.date, []);
-        grouped.get(entry.date).push(entry);
-      }
-      const labels = STANDUP_TABLE_HEADERS;
-      const avatars = await loadAvatars(entries.map((e) => e.accountId));
-      content.innerHTML = [...grouped.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(
-        ([date, dayEntries]) => `
-          <section class="history-day">
-            <h3 class="section-title">${escapeHtml(isoToDisplay(date))}</h3>
-            <div class="timeline">
-              ${dayEntries.map(
-          (entry) => historyEntryHtml(
-            { ...entry, dateDisplay: isoToDisplay(entry.date) },
-            labels,
-            avatars
-          )
-        ).join("")}
-            </div>
-          </section>`
-      ).join("");
-      bindIssueOpen(content);
-      for (const slot of content.querySelectorAll(".history-issues")) {
-        const issueGroups = {
-          tasks: (slot.dataset.tasks ?? "").split(",").filter(Boolean),
-          progress: (slot.dataset.progress ?? "").split(",").filter(Boolean),
-          problems: (slot.dataset.problems ?? "").split(",").filter(Boolean)
-        };
-        const allKeys = [
-          .../* @__PURE__ */ new Set([...issueGroups.tasks, ...issueGroups.progress, ...issueGroups.problems])
-        ];
-        if (!allKeys.length) {
-          slot.remove();
-          continue;
-        }
-        const issues = await enrichIssues(allKeys.map((key) => ({ key, url: "" })));
-        slot.innerHTML = workItemsSectionsHtml(
-          {
-            issueGroups,
-            issues,
-            blockerResolved: slot.dataset.blockerResolved === "1",
-            blockerIssueKey: slot.dataset.blockerIssueKey ?? ""
-          },
-          labels
-        );
-      }
-    } catch (e) {
-      content.innerHTML = `<div class="alert alert-error">${escapeHtml(e?.message ?? "Kh\xF4ng t\u1EA3i \u0111\u01B0\u1EE3c l\u1ECBch s\u1EED.")}</div>`;
-    }
-  };
-  container.querySelector("#apply-history")?.addEventListener("click", () => {
-    ctx2.historyFrom = container.querySelector("#from-date")?.value ?? ctx2.historyFrom;
-    ctx2.historyTo = container.querySelector("#to-date")?.value ?? ctx2.historyTo;
-    load();
-  });
-  await load();
-}
-
-// src/frontend/custom-ui/project-app/views/log.js
-var import_bridge6 = __toESM(require_out3());
-
-// src/lib/standup-rows.js
-var DEFAULT_STANDUP_ROW_COUNT = 3;
-var splitColumnLines = (text) => (text ?? "").split(/\n/);
-var joinColumnLines = (cells) => cells.map((cell) => cell.trim()).filter(Boolean).join("\n");
-var rowIdCounter = 0;
-var createRowId = () => {
-  rowIdCounter += 1;
-  return `standup-row-${rowIdCounter}-${Date.now()}`;
-};
-var createDefaultRows = (count = DEFAULT_STANDUP_ROW_COUNT) => Array.from({ length: count }, () => ({
-  id: createRowId(),
-  tasks: "",
-  progress: "",
-  problems: ""
-}));
-var fieldsToRows = ({ yesterday = "", today = "", blockers = "" }, { defaultRowCount = DEFAULT_STANDUP_ROW_COUNT } = {}) => {
-  const tasks = splitColumnLines(yesterday);
-  const progress = splitColumnLines(today);
-  const problems = splitColumnLines(blockers);
-  const rowCount = Math.max(
-    tasks.length,
-    progress.length,
-    problems.length,
-    defaultRowCount
-  );
-  return Array.from({ length: rowCount }, (_, index) => ({
-    id: createRowId(),
-    tasks: (tasks[index] ?? "").trim(),
-    progress: (progress[index] ?? "").trim(),
-    problems: (problems[index] ?? "").trim()
-  }));
-};
-var rowsToFields = (rows, defaultProblems = "Kh\xF4ng c\xF3") => {
-  const tasks = rows.map((row) => row.tasks ?? "");
-  const progress = rows.map((row) => row.progress ?? "");
-  const problems = rows.map((row) => row.problems ?? "");
-  let blockers = joinColumnLines(problems);
-  if (!blockers) blockers = defaultProblems;
-  return {
-    yesterday: joinColumnLines(tasks),
-    today: joinColumnLines(progress),
-    blockers
-  };
-};
-
-// src/frontend/custom-ui/project-app/modules/log-form.js
-var import_bridge5 = __toESM(require_out3());
-var syncRowHeights = (rowEl) => {
-  if (!rowEl) return;
-  const textareas = rowEl.querySelectorAll("textarea.cell-input");
-  let maxHeight = 0;
-  textareas.forEach((ta) => {
-    ta.style.height = "auto";
-    maxHeight = Math.max(maxHeight, ta.scrollHeight);
-  });
-  textareas.forEach((ta) => {
-    ta.style.height = `${maxHeight}px`;
-  });
-};
-var LogFormController = class {
-  constructor({ projectKey, onRowsChange }) {
-    this.projectKey = projectKey;
-    this.onRowsChange = onRowsChange;
-    this.container = null;
-    this.bound = false;
-    this.state = {
-      rows: [],
-      placeholders: { ...STANDUP_PLACEHOLDER },
-      headers: { ...STANDUP_TABLE_HEADERS },
-      minRows: 1,
-      maxRows: 20,
-      issuesTitle: STANDUP_LINKED_WORK_ITEMS_TITLE,
-      issues: [],
-      lockedKeys: [],
-      maxIssues: 20,
-      enableReorder: true,
-      enableStatusChange: true,
-      pasteText: "",
-      searchQuery: "",
-      suggestions: [],
-      searching: false,
-      pasteError: "",
-      dragIndex: null,
-      addModalOpen: false
-    };
-  }
-  setRows(rows) {
-    this.state.rows = (rows ?? []).map((row) => ({
-      id: row.id,
-      tasks: row.tasks ?? "",
-      progress: row.progress ?? "",
-      problems: row.problems ?? ""
-    }));
-    this.render();
-  }
-  getRows() {
-    return this.state.rows.map((row) => ({ ...row }));
-  }
-  setIssues(issues) {
-    this.state.issues = issues ?? [];
-    this.render();
-  }
-  getIssues() {
-    return this.state.issues;
-  }
-  getLinkedIssueKeys() {
-    return this.state.issues.map((issue) => issue.key);
-  }
-  mount(container) {
-    if (this.container !== container) {
-      this.container = container;
-      this.bound = false;
-    }
-    if (!this.bound) {
-      this.bindEvents();
-      this.bound = true;
-    }
-    this.render();
-  }
-  unmount() {
-    if (this.container) this.container.innerHTML = "";
-  }
-  rowHtml(row, index) {
-    const canRemove = this.state.rows.length > this.state.minRows;
-    return `
-      <tr data-row-id="${escapeHtml(row.id)}">
-        <td class="cell-index">${index + 1}</td>
-        <td class="cell-content">
-          <textarea class="cell-input cell-input-tasks" data-row-id="${escapeHtml(row.id)}" data-field="tasks" rows="1" placeholder="${escapeHtml(this.state.placeholders.tasks)}">${escapeHtml(row.tasks ?? "")}</textarea>
-        </td>
-        <td class="cell-content">
-          <input type="text" class="cell-input cell-input-progress" data-row-id="${escapeHtml(row.id)}" data-field="progress" value="${escapeHtml(row.progress ?? "")}" placeholder="${escapeHtml(this.state.placeholders.progress)}" title="${escapeHtml(row.progress ?? "")}" />
-        </td>
-        <td class="cell-content">
-          <textarea class="cell-input cell-input-problems" data-row-id="${escapeHtml(row.id)}" data-field="problems" rows="1" placeholder="${escapeHtml(this.state.placeholders.problems)}">${escapeHtml(row.problems ?? "")}</textarea>
-        </td>
-        <td class="cell-actions">
-          <button type="button" class="btn-row-remove" data-remove-row="${escapeHtml(row.id)}" title="X\xF3a h\xE0ng" ${canRemove ? "" : "disabled"}>\xD7</button>
-        </td>
-      </tr>
-    `;
-  }
-  tableHtml() {
-    const atMax = this.state.rows.length >= this.state.maxRows;
-    return `
-      <div class="daily-table-wrap">
-        <table class="daily-table" role="grid">
-          <colgroup>
-            <col class="col-index" /><col class="col-tasks" /><col class="col-progress" /><col class="col-problems" /><col class="col-actions" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">${escapeHtml(this.state.headers.tasks)}</th>
-              <th scope="col">${escapeHtml(this.state.headers.progress)}</th>
-              <th scope="col">${escapeHtml(this.state.headers.problems)}</th>
-              <th scope="col" aria-label="Thao t\xE1c"></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${this.state.rows.map((row, index) => this.rowHtml(row, index)).join("")}
-          </tbody>
-        </table>
-        <div class="daily-table-footer">
-          <button type="button" class="btn-add-row" id="add-row" ${atMax ? "disabled" : ""}>Th\xEAm h\xE0ng</button>
-          ${atMax ? `<p class="footer-hint">T\u1ED1i \u0111a ${this.state.maxRows} h\xE0ng.</p>` : ""}
-        </div>
-      </div>
-    `;
-  }
-  addModalHtml() {
-    const atLimit = this.state.issues.length >= this.state.maxIssues;
-    const pasteCount = parsePaste(this.state.pasteText).length;
-    return `
-      <div class="modal-backdrop" data-modal-backdrop role="presentation">
-        <div class="modal-dialog" role="dialog" aria-modal="true">
-          <div class="modal-header">
-            <h4 class="modal-title">Th\xEAm work item</h4>
-            <button type="button" class="modal-close" id="close-add-modal" aria-label="\u0110\xF3ng">\xD7</button>
-          </div>
-          <div class="modal-body">
-            ${!atLimit ? `<div class="panel">
-                    <label class="panel-label" for="paste-input">D\xE1n link ho\u1EB7c m\xE3 work item</label>
-                    <textarea id="paste-input" class="paste-input" rows="3">${escapeHtml(this.state.pasteText)}</textarea>
-                    ${this.state.pasteError ? `<p class="error">${escapeHtml(this.state.pasteError)}</p>` : ""}
-                    <button type="button" class="btn btn-primary" id="paste-add" ${!this.state.pasteText.trim() ? "disabled" : ""}>
-                      Th\xEAm ${pasteCount > 1 ? `${pasteCount} work item` : "work item"}
-                    </button>
-                  </div>` : `<p class="error">\u0110\xE3 \u0111\u1EA1t t\u1ED1i \u0111a ${this.state.maxIssues} work item.</p>`}
-            ${this.projectKey && !atLimit ? `<div class="panel">
-                    <label class="panel-label" for="search-input">T\xECm work item trong project</label>
-                    <div class="search-row">
-                      <input id="search-input" class="search-input" type="text" placeholder="M\xE3 work item ho\u1EB7c t\u1EEB kh\xF3a\u2026" value="${escapeHtml(this.state.searchQuery)}" />
-                      <button type="button" class="btn" id="search-btn" ${this.state.searching ? "disabled" : ""}>${this.state.searching ? "\u2026" : "T\xECm"}</button>
-                    </div>
-                    ${this.state.suggestions.length ? `<div class="suggestions">${this.state.suggestions.map(
-      (issue) => `<button type="button" class="suggestion" data-add="${escapeHtml(issue.key)}" data-summary="${escapeHtml(issue.summary)}" data-status="${escapeHtml(issue.status)}">${escapeHtml(issue.key)} \u2014 ${escapeHtml(issue.summary)}</button>`
-    ).join("")}</div>` : ""}
-                  </div>` : ""}
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn" id="close-add-modal-footer">H\u1EE7y</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  issuesHtml() {
-    const atLimit = this.state.issues.length >= this.state.maxIssues;
-    const hasIssues = this.state.issues.length > 0;
-    return `
-      <section class="issues-section">
-        ${hasIssues ? `<h3 class="issues-section-title">${escapeHtml(this.state.issuesTitle)}</h3>
-               <div class="backlog-panel">
-                 <div class="backlog-header">
-                   <span class="backlog-title">Backlog</span>
-                   <span class="backlog-count">${this.state.issues.length}/${this.state.maxIssues} vi\u1EC7c</span>
-                 </div>
-                 <div class="issue-list" role="list">
-                   ${this.state.issues.map(
-      (issue, index) => issueRowHtml(issue, {
-        index,
-        lockedKeys: this.state.lockedKeys,
-        enableReorder: this.state.enableReorder,
-        enableStatusChange: this.state.enableStatusChange
-      })
-    ).join("")}
-                 </div>
-               </div>
-               ${!atLimit ? `<div class="issues-section-footer"><button type="button" class="btn btn-primary" id="open-add-modal">Th\xEAm work item</button></div>` : ""}` : `<div class="issues-empty-actions"><button type="button" class="btn btn-primary" id="open-add-modal">Th\xEAm work item</button></div>`}
+      <section class="section">
+        <h3 class="section-title">Xu\u1EA5t Excel</h3>
+        <p class="section-filter-hint">
+          T\u1EA3i file <strong>.xlsx</strong> v\u1EC1 m\xE1y \u2014 m\u1EDF b\u1EB1ng Microsoft Excel ho\u1EB7c Google Sheets.
+        </p>
+        <button type="button" class="btn btn-primary" id="export-excel" ${state.loading ? "disabled" : ""}>
+          ${state.loading ? "\u0110ang xu\u1EA5t\u2026" : "T\u1EA3i file Excel (.xlsx)"}
+        </button>
       </section>
-    `;
-  }
-  render() {
-    if (!this.container) return;
-    this.container.innerHTML = `
-      <div class="log-form${this.state.addModalOpen ? " is-modal-open" : ""}">
-        ${this.tableHtml()}
-        ${this.issuesHtml()}
-        ${this.state.addModalOpen ? this.addModalHtml() : ""}
-      </div>
-    `;
-    this.container.querySelectorAll("tr[data-row-id]").forEach(syncRowHeights);
-  }
-  notifyRowsChange() {
-    this.onRowsChange?.(this.getRows());
-  }
-  updateField(rowId, field, value) {
-    const row = this.state.rows.find((item) => item.id === rowId);
-    if (!row || !field) return;
-    row[field] = value;
-    this.notifyRowsChange();
-  }
-  closeAddModal() {
-    this.state.addModalOpen = false;
-    this.state.pasteText = "";
-    this.state.pasteError = "";
-    this.state.searchQuery = "";
-    this.state.suggestions = [];
-    this.state.searching = false;
-  }
-  async addIssues(items) {
-    if (!items?.length) return;
-    const merged = [...this.state.issues];
-    for (const item of items) {
-      if (!merged.some((issue) => issue.key === item.key)) merged.push(item);
-    }
-    const capped = merged.slice(0, this.state.maxIssues);
-    this.state.issues = await enrichIssues(capped);
-    this.render();
-  }
-  removeIssue(key) {
-    this.state.issues = this.state.issues.filter((issue) => issue.key !== key);
-    this.render();
-  }
-  reorderIssues(fromIndex, toIndex) {
-    if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
-    const next = [...this.state.issues];
-    const [moved] = next.splice(fromIndex, 1);
-    next.splice(toIndex, 0, moved);
-    this.state.issues = next;
-    this.render();
-  }
-  async handleCellBlur(rowId, field, value) {
-    const found = parseJiraLinkPaste(value);
-    if (!found.length) return;
-    const stripped = stripJiraLinkPasteContent(value);
-    this.updateField(rowId, field, stripped);
-    await this.addIssues(found);
-    this.render();
-  }
-  bindEvents() {
-    const root2 = this.container;
-    if (!root2) return;
-    root2.addEventListener("input", (event) => {
-      const target = event.target;
-      if (target.id === "paste-input") {
-        this.state.pasteText = target.value;
-        this.state.pasteError = "";
-        this.render();
-        return;
-      }
-      if (target.id === "search-input") {
-        this.state.searchQuery = target.value;
-        return;
-      }
-      if (!target.dataset?.rowId || !target.dataset?.field) return;
-      this.updateField(target.dataset.rowId, target.dataset.field, target.value);
-      if (target.dataset.field === "progress") target.title = target.value;
-      if (target.tagName === "TEXTAREA") syncRowHeights(target.closest("tr"));
-    });
-    root2.addEventListener(
-      "blur",
-      (event) => {
-        const target = event.target;
-        if (!target.dataset?.rowId || !target.dataset?.field) return;
-        this.handleCellBlur(target.dataset.rowId, target.dataset.field, target.value ?? "");
-      },
-      true
-    );
-    root2.addEventListener("click", async (event) => {
-      const openEl = event.target.closest("[data-open]");
-      if (openEl?.dataset.open) {
-        event.preventDefault();
-        import_bridge5.router.open(`/browse/${openEl.dataset.open}`);
-        return;
-      }
-      if (event.target.classList?.contains("modal-backdrop")) {
-        this.closeAddModal();
-        this.render();
-        return;
-      }
-      const target = event.target.closest("button");
-      if (!target) return;
-      if (target.id === "open-add-modal") {
-        if (this.state.issues.length >= this.state.maxIssues) return;
-        this.state.addModalOpen = true;
-        this.render();
-        return;
-      }
-      if (target.id === "close-add-modal" || target.id === "close-add-modal-footer") {
-        this.closeAddModal();
-        this.render();
-        return;
-      }
-      if (target.id === "add-row") {
-        if (this.state.rows.length >= this.state.maxRows) return;
-        this.state.rows.push({
-          id: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          tasks: "",
-          progress: "",
-          problems: ""
-        });
-        this.notifyRowsChange();
-        this.render();
-        return;
-      }
-      if (target.dataset.removeRow) {
-        if (this.state.rows.length <= this.state.minRows) return;
-        this.state.rows = this.state.rows.filter((row) => row.id !== target.dataset.removeRow);
-        this.notifyRowsChange();
-        this.render();
-        return;
-      }
-      if (target.id === "paste-add") {
-        const found = parsePaste(this.state.pasteText);
-        if (!found.length) {
-          this.state.pasteError = "Ch\u01B0a nh\u1EADn di\u1EC7n \u0111\u01B0\u1EE3c link Jira ho\u1EB7c m\xE3 work item.";
-          this.render();
-          return;
-        }
-        const room = this.state.maxIssues - this.state.issues.length;
-        if (room <= 0) {
-          this.state.pasteError = `\u0110\xE3 \u0111\u1EA1t t\u1ED1i \u0111a ${this.state.maxIssues} work item.`;
-          this.render();
-          return;
-        }
-        await this.addIssues(found.slice(0, room));
-        this.closeAddModal();
-        this.render();
-        return;
-      }
-      if (target.id === "search-btn") {
-        const query = this.state.searchQuery.trim();
-        if (!query || !this.projectKey) return;
-        const pasted = parsePaste(query);
-        if (pasted.length === 1) {
-          await this.addIssues(pasted.slice(0, 1));
-          this.closeAddModal();
-          this.render();
-          return;
-        }
-        this.state.searching = true;
-        this.render();
-        try {
-          const result = await (0, import_bridge5.invoke)("searchIssuesForLink", { projectKey: this.projectKey, query });
-          this.state.suggestions = result?.issues ?? [];
-        } catch {
-          this.state.suggestions = [];
-        } finally {
-          this.state.searching = false;
-          this.render();
-        }
-        return;
-      }
-      if (target.dataset.removeIssue) {
-        const row = target.closest(".row-card");
-        if (row) row.classList.add("is-removing");
-        setTimeout(() => this.removeIssue(target.dataset.removeIssue), 200);
-        return;
-      }
-      if (target.dataset.status && this.state.enableStatusChange) {
-        const issue = this.state.issues.find((item) => item.key === target.dataset.status);
-        if (!issue) return;
-        const next = getNextStatus(issue.statusCategory ?? "new");
-        try {
-          await (0, import_bridge5.invoke)("updateIssueStatus", { issueKey: issue.key, statusCategory: next.category });
-          issue.status = next.label;
-          issue.statusCategory = next.category;
-          this.render();
-        } catch (e) {
-          console.error(e);
-        }
-        return;
-      }
-      if (target.dataset.add) {
-        if (this.state.issues.some((issue) => issue.key === target.dataset.add)) return;
-        await this.addIssues([
-          {
-            key: target.dataset.add,
-            url: "",
-            summary: target.dataset.summary ?? "",
-            status: target.dataset.status ?? ""
-          }
-        ]);
-        this.closeAddModal();
-        this.render();
-      }
-    });
-    root2.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && this.state.addModalOpen) {
-        this.closeAddModal();
-        this.render();
-      }
-    });
-    root2.addEventListener("dragstart", (event) => {
-      const grip = event.target.closest("[data-drag-index]");
-      if (!grip) return;
-      this.state.dragIndex = Number(grip.dataset.dragIndex);
-      event.dataTransfer.effectAllowed = "move";
-    });
-    root2.addEventListener("dragover", (event) => {
-      if (this.state.dragIndex == null) return;
-      event.preventDefault();
-      const row = event.target.closest(".row-card");
-      root2.querySelectorAll(".row-card.is-drag-over").forEach((el) => el.classList.remove("is-drag-over"));
-      if (row) row.classList.add("is-drag-over");
-    });
-    root2.addEventListener("drop", (event) => {
-      event.preventDefault();
-      const row = event.target.closest(".row-card");
-      root2.querySelectorAll(".row-card.is-drag-over").forEach((el) => el.classList.remove("is-drag-over"));
-      if (row && this.state.dragIndex != null) {
-        this.reorderIssues(this.state.dragIndex, Number(row.dataset.index));
-      }
-      this.state.dragIndex = null;
-    });
-    root2.addEventListener("dragend", () => {
-      this.state.dragIndex = null;
-      root2.querySelectorAll(".row-card.is-drag-over").forEach((el) => el.classList.remove("is-drag-over"));
-    });
-  }
-};
 
-// src/frontend/custom-ui/project-app/views/log.js
-var collectStoredIssueKeys = (entry) => {
-  const keys2 = new Set(entry?.linkedIssueKeys ?? []);
-  for (const field of ["yesterday", "today", "blockers"]) {
-    for (const key of extractJiraIssueKeys(entry?.[field])) keys2.add(key);
-    for (const issue of parseStandupFieldParts(entry?.[field]).issues) keys2.add(issue.key);
-  }
-  return [...keys2];
-};
-async function renderLog(container, ctx2) {
-  const { projectKey, sprintName } = ctx2;
-  if (!ctx2.logForm) {
-    ctx2.logForm = new LogFormController({ projectKey });
-    ctx2.logForm.setRows(createDefaultRows());
-  }
-  const form = ctx2.logForm;
-  let alreadyLogged = false;
-  let message = "";
-  let error = "";
-  const refreshSubmitState = () => {
-    const fields = rowsToFields(form.getRows(), STANDUP_PLACEHOLDER.problems);
-    const canSubmit = ["yesterday", "today", "blockers"].every(
-      (name) => !isStandupFieldEmpty(fields[name], [])
-    );
-    const btn = container.querySelector("#submit-standup");
-    if (btn) btn.disabled = !canSubmit;
-  };
-  form.onRowsChange = refreshSubmitState;
-  const renderShell = () => {
-    container.innerHTML = `
-      <div class="page log-page">
-        <header class="page-header">
-          <div>
-            <h2 class="page-title">${escapeHtml(formatTeamSyncTitle(sprintName))}</h2>
-            <p class="page-subtitle">${escapeHtml(UI_COPY.teamSyncSubtitle)}</p>
-          </div>
-        </header>
+      <section class="section">
+        <h3 class="section-title">X\xF3a to\xE0n b\u1ED9 d\u1EEF li\u1EC7u</h3>
+        <p class="section-filter-hint">X\xF3a m\u1ECDi b\u1EA3n ghi Team Sync tr\xEAn site. C\xE0i \u0111\u1EB7t app v\u1EABn \u0111\u01B0\u1EE3c gi\u1EEF.</p>
+        ${!state.confirmingAll ? `<button type="button" class="btn btn-danger" id="request-purge-all" ${state.loading || state.members.length === 0 ? "disabled" : ""}>X\xF3a to\xE0n b\u1ED9 d\u1EEF li\u1EC7u</button>` : `<div class="alert alert-warning">
+                <p><strong>Kh\xF4ng th\u1EC3 ho\xE0n t\xE1c.</strong> X\xF3a to\xE0n b\u1ED9 b\u1EA3n ghi Team Sync c\u1EE7a m\u1ECDi th\xE0nh vi\xEAn?</p>
+                <div class="row-actions">
+                  <button type="button" class="btn btn-danger" id="confirm-purge-all" ${state.loading ? "disabled" : ""}>
+                    ${state.loading ? "\u0110ang x\xF3a\u2026" : "X\xE1c nh\u1EADn x\xF3a to\xE0n b\u1ED9"}
+                  </button>
+                  <button type="button" class="btn" id="cancel-purge-all" ${state.loading ? "disabled" : ""}>H\u1EE7y</button>
+                </div>
+              </div>`}
+      </section>
 
-        ${alreadyLogged ? '<div class="alert alert-success"><strong>\u0110\xE3 ghi h\xF4m nay</strong><p>B\u1EA1n c\xF3 th\u1EC3 ch\u1EC9nh s\u1EEDa v\xE0 g\u1EEDi l\u1EA1i b\u1EA5t c\u1EE9 l\xFAc n\xE0o trong ng\xE0y.</p></div>' : '<div class="alert alert-info"><strong>B\u1EAFt \u0111\u1EA7u nhanh</strong><p>\u0110i\u1EC1n b\u1EA3ng Tasks / Progress / Problems \u2014 m\u1ED7i h\xE0ng l\xE0 m\u1ED9t m\u1EE5c c\xF4ng vi\u1EC7c. Work item Jira gom \u1EDF m\u1EE5c \xABWork item l\xE0m vi\u1EC7c h\xF4m nay\xBB.</p></div>'}
-
-        ${error ? `<div class="alert alert-error">${escapeHtml(error)}</div>` : ""}
-        ${message ? `<div class="alert alert-info">${escapeHtml(message)}</div>` : ""}
-
-        <div id="log-form-host"></div>
-
-        <div class="form-footer">
-          <button type="button" class="btn btn-primary" id="submit-standup" disabled>
-            ${alreadyLogged ? "C\u1EADp nh\u1EADt Team Sync" : "G\u1EEDi Team Sync h\xF4m nay"}
-          </button>
-        </div>
-      </div>
-    `;
-    const host = container.querySelector("#log-form-host");
-    form.mount(host);
-    refreshSubmitState();
-    container.querySelector("#submit-standup")?.addEventListener("click", async () => {
-      const btn = container.querySelector("#submit-standup");
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "\u0110ang l\u01B0u\u2026";
-      }
-      error = "";
-      message = "";
-      const data = rowsToFields(form.getRows(), STANDUP_PLACEHOLDER.problems);
-      try {
-        const result = await (0, import_bridge6.invoke)("submitStandup", {
-          projectKey,
-          yesterday: serializeStandupText(data.yesterday),
-          today: serializeStandupText(data.today),
-          blockers: serializeStandupText(data.blockers),
-          linkedIssueKeys: form.getLinkedIssueKeys(),
-          date: todayIso()
-        });
-        alreadyLogged = true;
-        message = result?.problemNotification?.sent > 0 ? "\u0110\xE3 l\u01B0u Team Sync. \u0110\xE3 g\u1EEDi email th\xF4ng b\xE1o cho qu\u1EA3n tr\u1ECB project." : "\u0110\xE3 l\u01B0u Team Sync. C\u1EA3m \u01A1n b\u1EA1n!";
-      } catch (e) {
-        error = e?.message ?? "Kh\xF4ng l\u01B0u \u0111\u01B0\u1EE3c Team Sync.";
-      }
-      renderShell();
-    });
-  };
-  try {
-    const { entry } = await (0, import_bridge6.invoke)("getMyStandupToday", { projectKey, date: todayIso() });
-    if (entry) {
-      alreadyLogged = true;
-      message = "B\u1EA1n \u0111\xE3 ghi Team Sync h\xF4m nay. G\u1EEDi l\u1EA1i n\u1EBFu mu\u1ED1n c\u1EADp nh\u1EADt n\u1ED9i dung.";
-      form.setRows(
-        fieldsToRows(
-          {
-            yesterday: extractPlainText(entry.yesterday),
-            today: extractPlainText(entry.today),
-            blockers: extractPlainText(entry.blockers)
-          },
-          { defaultRowCount: createDefaultRows().length }
-        )
-      );
-      const keys2 = collectStoredIssueKeys(entry);
-      if (keys2.length) {
-        form.setIssues(await enrichIssues(keys2.map((key) => ({ key, url: "" }))));
-      } else {
-        form.setIssues([]);
-      }
-    }
-  } catch {
-  }
-  renderShell();
-}
-
-// src/frontend/custom-ui/project-app/views/summary.js
-var import_bridge7 = __toESM(require_out3());
-
-// src/lib/summary.js
-var SPRINT_SUMMARY_WEEKS = 2;
-var SPRINT_SUMMARY_DAYS = SPRINT_SUMMARY_WEEKS * 7;
-
-// src/frontend/custom-ui/project-app/views/summary.js
-var hasRealBlocker = (text) => {
-  const lower = extractPlainText(text).toLowerCase();
-  return lower.length > 0 && !["none", "kh\xF4ng c\xF3", "khong co", "n/a"].includes(lower);
-};
-var summaryEntryHtml = (entry, labels, avatars) => {
-  const yesterday = extractPlainText(entry.yesterday);
-  const today = extractPlainText(entry.today);
-  const blockers = extractPlainText(entry.blockers);
-  const hasBlocker = hasRealBlocker(entry.blockers);
-  return `
-    <article class="entry-card summary-entry">
-      <header class="entry-header">
-        <div class="entry-header-main">
-          ${userAvatarHtml(entry.accountId, entry.displayName, avatars[entry.accountId] ?? "", "entry-avatar")}
-          <span class="entry-name">${escapeHtml(entry.displayName)}</span>
-        </div>
-      </header>
-      <div class="status-panel">
-        <div class="status-grid">
-          ${yesterday ? `<div class="status-card status-card--tasks"><span class="status-label">${escapeHtml(labels.tasks)}</span><p class="status-text">${escapeHtml(yesterday)}</p></div>` : ""}
-          ${today ? `<div class="status-card status-card--progress"><span class="status-label">${escapeHtml(labels.progress)}</span><p class="status-text">${escapeHtml(today)}</p></div>` : ""}
-          ${hasBlocker ? `<div class="status-card status-card--problems"><span class="status-label">${escapeHtml(labels.problems)}</span><p class="status-text">${escapeHtml(blockers)}</p></div>` : ""}
-        </div>
-      </div>
-    </article>
-  `;
-};
-var defaultSprintStart = (ctx2) => ctx2.sprintStart ?? ctx2.activeSprintStart ?? mondayOfWeekIso();
-async function renderSummary(container, ctx2) {
-  const { projectKey, sprintName } = ctx2;
-  if (!ctx2.sprintStart) ctx2.sprintStart = defaultSprintStart(ctx2);
-  container.innerHTML = `
-    <div class="page summary-page">
-      <header class="page-header">
-        <div>
-          <h2 class="page-title">T\u1ED5ng k\u1EBFt sprint \xB7 ${escapeHtml(formatTeamSyncTitle(sprintName))}</h2>
-          <p class="page-subtitle">T\u1ED5ng h\u1EE3p Team Sync trong ${SPRINT_SUMMARY_WEEKS} tu\u1EA7n. Ch\u1ECDn ng\xE0y b\u1EAFt \u0111\u1EA7u sprint, r\u1ED3i b\u1EA5m \xABXem t\u1ED5ng k\u1EBFt\xBB.</p>
-        </div>
-      </header>
-      <div class="filter-card">
-        <label>Ng\xE0y b\u1EAFt \u0111\u1EA7u sprint
-          <input type="date" id="sprint-start" value="${escapeHtml(ctx2.sprintStart)}" />
-        </label>
-        <button type="button" class="btn btn-primary" id="generate-summary">Xem t\u1ED5ng k\u1EBFt</button>
-      </div>
-      <div id="summary-content"></div>
+      <section class="section">
+        <h3 class="section-title">Th\xF4ng b\xE1o quy\u1EC1n ri\xEAng t\u01B0</h3>
+        <p class="section-filter-hint">
+          D\u1EEF li\u1EC7u l\u01B0u trong Forge app storage, t\xE1ch theo t\u1EEBng Jira site. Kh\xF4ng g\u1EEDi cho b\xEAn th\u1EE9 ba.
+        </p>
+      </section>
     </div>
   `;
-  const renderResult = async (summary) => {
-    const content = container.querySelector("#summary-content");
-    if (!content || !summary) return;
-    const labels = STANDUP_TABLE_HEADERS;
-    const allEntries = (summary.days ?? []).flatMap((day) => day.entries ?? []);
-    const avatars = await loadAvatars(allEntries.map((e) => e.accountId));
-    const startDate = summary.sprintStartDate ?? summary.weekStartDate;
-    const endDate = summary.sprintEndDate ?? startDate;
-    content.innerHTML = `
-      <div class="alert alert-info">
-        Sprint ${escapeHtml(isoToDisplay(startDate))} \u2013 ${escapeHtml(isoToDisplay(endDate))} \xB7 ${SPRINT_SUMMARY_WEEKS} tu\u1EA7n \xB7 ${summary.totalEntries} b\u1EA3n ghi \xB7 ${summary.blockerCount} c\xF3 v\u1EA5n \u0111\u1EC1
-      </div>
-      ${(summary.days ?? []).map(
-      (day) => `
-        <section class="history-day">
-          <h3 class="section-title">${escapeHtml(isoToDisplay(day.date))}</h3>
-          ${day.entries.length === 0 ? '<p class="status-empty">Ch\u01B0a c\xF3 b\u1EA3n ghi Team Sync.</p>' : `<div class="timeline">${day.entries.map((entry) => summaryEntryHtml(entry, labels, avatars)).join("")}</div>`}
-        </section>`
-    ).join("")}
-    `;
-  };
-  const generate = async () => {
-    const content = container.querySelector("#summary-content");
-    if (!content) return;
-    content.innerHTML = '<div class="page-loading">\u0110ang t\u1EA1o t\u1ED5ng k\u1EBFt\u2026</div>';
-    ctx2.sprintStart = container.querySelector("#sprint-start")?.value ?? ctx2.sprintStart;
-    try {
-      const summary = await (0, import_bridge7.invoke)("getWeeklySummary", {
-        projectKey,
-        sprintStartDate: ctx2.sprintStart
-      });
-      ctx2.summary = summary;
-      await renderResult(summary);
-    } catch (e) {
-      content.innerHTML = `<div class="alert alert-error">${escapeHtml(e?.message ?? "Kh\xF4ng t\u1EA1o \u0111\u01B0\u1EE3c t\u1ED5ng k\u1EBFt sprint.")}</div>`;
-    }
-  };
-  container.querySelector("#generate-summary")?.addEventListener("click", generate);
-  if (!ctx2.summary) {
-    container.querySelector("#summary-content").innerHTML = `
-      <div class="empty-state">
-        <h4>Ch\u01B0a c\xF3 t\u1ED5ng k\u1EBFt</h4>
-        <p>Ch\u1ECDn ng\xE0y b\u1EAFt \u0111\u1EA7u sprint (${SPRINT_SUMMARY_WEEKS} tu\u1EA7n) v\xE0 b\u1EA5m \xABXem t\u1ED5ng k\u1EBFt\xBB.</p>
-      </div>`;
-  } else {
-    await renderResult(ctx2.summary);
-  }
-}
-
-// src/frontend/custom-ui/project-app/main.js
-var root = document.getElementById("root");
-var VIEW_DASHBOARD = "dashboard";
-var VIEW_LOG = "log";
-var VIEW_HISTORY = "history";
-var VIEW_SUMMARY = "summary";
-var routeFromPathname = (pathname = "") => {
-  const last = pathname.split("/").filter(Boolean).pop()?.toLowerCase() ?? "";
-  if (last === VIEW_LOG) return VIEW_LOG;
-  if (last === VIEW_HISTORY) return VIEW_HISTORY;
-  if (last === VIEW_SUMMARY) return VIEW_SUMMARY;
-  if (last === VIEW_DASHBOARD) return VIEW_DASHBOARD;
-  return VIEW_DASHBOARD;
-};
-var ctx = {
-  projectKey: null,
-  sprintName: null,
-  appDisabled: false,
-  activeRoute: VIEW_DASHBOARD,
-  memberFilter: "",
-  logForm: null,
-  historyFrom: null,
-  historyTo: null,
-  sprintStart: null,
-  activeSprintStart: null,
-  summary: null,
-  pageTitle: "Team Sync",
-  teamSyncSubtitle: UI_COPY.teamSyncSubtitle
-};
-var navigateLog = async () => {
-  if (ctx.historyRef) {
-    ctx.historyRef.push("/log");
-  } else {
-    ctx.activeRoute = VIEW_LOG;
-    await render();
-  }
-};
-var setMemberFilter = async (filter) => {
-  ctx.memberFilter = filter;
-  if (ctx.activeRoute === VIEW_DASHBOARD) await render();
-};
-var renderView = async (container) => {
-  const viewCtx = {
-    ...ctx,
-    onNavigateLog: navigateLog,
-    setMemberFilter
-  };
-  switch (ctx.activeRoute) {
-    case VIEW_DASHBOARD:
-      await renderDashboard(container, viewCtx);
-      break;
-    case VIEW_LOG:
-      await renderLog(container, viewCtx);
-      break;
-    case VIEW_HISTORY:
-      await renderHistory(container, viewCtx);
-      break;
-    case VIEW_SUMMARY:
-      await renderSummary(container, viewCtx);
-      break;
-    default:
-      await renderDashboard(container, viewCtx);
-  }
-};
-var render = async () => {
-  if (!root) return;
-  if (!ctx.projectKey) {
-    root.innerHTML = `<div class="app-shell"><div class="alert alert-warning">C\u1EA7n m\u1EDF t\u1EEB project \u2014 ${UI_COPY.noProject}</div></div>`;
-    return;
-  }
-  if (ctx.appDisabled) {
-    root.innerHTML = `<div class="app-shell"><div class="alert alert-warning">App ch\u01B0a b\u1EADt \u2014 ${UI_COPY.disabled}</div></div>`;
-    return;
-  }
-  root.innerHTML = '<div class="app-shell"><div id="view-host"></div></div>';
-  const host = root.querySelector("#view-host");
-  await renderView(host);
-};
-var boot = async () => {
-  if (!root) return;
-  root.innerHTML = `<div class="app-shell"><div class="page-loading">${UI_COPY.loading}</div></div>`;
-  try {
-    const extensionCtx = await import_bridge8.view.getContext();
-    ctx.projectKey = extensionCtx?.extension?.project?.key ?? null;
-  } catch {
-    ctx.projectKey = null;
-  }
-  try {
-    const history = await import_bridge8.view.createHistory();
-    ctx.historyRef = history;
-    ctx.activeRoute = routeFromPathname(history.location.pathname);
-    history.listen((loc) => {
-      ctx.activeRoute = routeFromPathname(loc.pathname);
-      render();
+  root.querySelector("#export-excel")?.addEventListener("click", handleExportExcel);
+  root.querySelectorAll("[data-request-delete]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setState({ confirmingId: btn.dataset.requestDelete, confirmingAll: false });
     });
-  } catch {
-    ctx.activeRoute = VIEW_DASHBOARD;
-  }
-  if (ctx.projectKey) {
-    try {
-      const status = await (0, import_bridge8.invoke)("getAppStatus", { projectKey: ctx.projectKey });
-      ctx.appDisabled = !status?.projectEnabled;
-      ctx.sprintName = status?.activeSprint?.name ?? null;
-      ctx.activeSprintStart = status?.activeSprint?.startDate?.slice(0, 10) ?? null;
-      ctx.pageTitle = formatTeamSyncTitle(ctx.sprintName);
-    } catch {
-      ctx.appDisabled = false;
-    }
-  }
-  await render();
+  });
+  root.querySelectorAll("[data-confirm-delete]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const member = state.members.find((m) => m.accountId === btn.dataset.confirmDelete);
+      if (member) handleDeleteMember(member);
+    });
+  });
+  root.querySelector("[data-cancel-delete]")?.addEventListener("click", () => {
+    setState({ confirmingId: null });
+  });
+  root.querySelector("#request-purge-all")?.addEventListener("click", () => {
+    setState({ confirmingAll: true, confirmingId: null });
+  });
+  root.querySelector("#cancel-purge-all")?.addEventListener("click", () => {
+    setState({ confirmingAll: false });
+  });
+  root.querySelector("#confirm-purge-all")?.addEventListener("click", handleDeleteAll);
 };
-boot();
+await loadMembers();
 /*! Bundled license information:
 
 xlsx/xlsx.mjs:

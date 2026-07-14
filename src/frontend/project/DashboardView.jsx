@@ -153,7 +153,7 @@ export const DashboardView = ({ projectKey, onLogStandup }) => {
     }
     try {
       const payload = await invoke('exportStandupData');
-      setExportMsg(`Đã chuẩn bị xuất ${payload.entryCount} bản ghi.`);
+      setExportMsg(`Đã tạo ${payload.filename} (${payload.entryCount} bản ghi CSV — mở bằng Excel).`);
     } catch (e) {
       setError(e?.message ?? 'Không xuất được dữ liệu.');
     }

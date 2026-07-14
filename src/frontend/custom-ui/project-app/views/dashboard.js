@@ -4,7 +4,7 @@ import { isoToDayMonth, isoToDisplay } from '../../../../lib/dates.js';
 import { STANDUP_LABELS_SHORT } from '../../../../lib/labels.js';
 import { hadBlockerContent } from '../../../../lib/blockers.js';
 import { groupStandupLinkedIssues } from '../../../../lib/standup-issues.js';
-import { escapeHtml, formatTime } from '../shared/dom.js';
+import { escapeHtml, formatTime, downloadExcelFromCsv } from '../shared/dom.js';
 import { userAvatarHtml } from '../shared/avatars.js';
 import { bindIssueOpen, enrichIssues } from '../shared/issues.js';
 import { workItemsSectionsHtml } from '../shared/work-items.js';
@@ -18,17 +18,15 @@ const ageLabel = (blocker) => {
 
 const openBlockerCardHtml = (blocker, canAdminister, avatars) => {
   const text = extractPlainText(blocker.blockers);
-  const badges = [
-    blocker.typeLabel
-      ? `<span class="blocker-badge">${escapeHtml(blocker.typeLabel)}</span>`
-      : '',
-    blocker.isStale ? '<span class="blocker-badge blocker-badge--stale">Quá hạn</span>' : '',
-    blocker.isToday && !blocker.isStale
+  const statusClass = blocker.isStale ? 'is-stale' : blocker.isToday ? 'is-new' : 'is-open';
+  const ageBadge = blocker.isStale
+    ? '<span class="blocker-badge blocker-badge--stale">Quá hạn</span>'
+    : blocker.isToday
       ? '<span class="blocker-badge blocker-badge--new">Mới</span>'
-      : '',
-  ]
-    .filter(Boolean)
-    .join('');
+      : `<span class="blocker-badge blocker-badge--age">${escapeHtml(ageLabel(blocker))}</span>`;
+  const typeBadge = blocker.typeLabel
+    ? `<span class="blocker-badge blocker-badge--type">${escapeHtml(blocker.typeLabel)}</span>`
+    : '';
 
   const issueKeys = (blocker.linkedIssueKeys ?? [])
     .map(
@@ -38,19 +36,30 @@ const openBlockerCardHtml = (blocker, canAdminister, avatars) => {
     .join('');
 
   return `
-    <article class="blocker-card${blocker.isStale ? ' is-stale' : ''}" data-blocker-key="${escapeHtml(blocker.key)}">
-      <div class="blocker-card-badges">${badges}</div>
-      <p class="blocker-card-text">${escapeHtml(text)}</p>
-      <div class="blocker-card-meta">
-        ${userAvatarHtml(blocker.accountId, blocker.displayName, avatars?.[blocker.accountId] ?? '', 'entry-avatar')}
-        <span>${escapeHtml(blocker.displayName)} · ${escapeHtml(isoToDisplay(blocker.date))} · ${escapeHtml(ageLabel(blocker))}</span>
+    <article class="blocker-card ${statusClass}" data-blocker-key="${escapeHtml(blocker.key)}">
+      <div class="blocker-card-accent" aria-hidden="true"></div>
+      <div class="blocker-card-body">
+        <div class="blocker-card-top">
+          <div class="blocker-card-badges">${ageBadge}${typeBadge}</div>
+          <p class="blocker-card-text">${escapeHtml(text)}</p>
+          ${issueKeys ? `<div class="blocker-card-issues">${issueKeys}</div>` : ''}
+        </div>
+        <div class="blocker-card-divider" aria-hidden="true"></div>
+        <div class="blocker-card-bottom">
+          <div class="blocker-card-meta">
+            ${userAvatarHtml(blocker.accountId, blocker.displayName, avatars?.[blocker.accountId] ?? '', 'entry-avatar')}
+            <div class="blocker-card-meta-text">
+              <span class="blocker-card-author">${escapeHtml(blocker.displayName)}</span>
+              <span class="blocker-card-date">${escapeHtml(isoToDisplay(blocker.date))} · ${escapeHtml(ageLabel(blocker))}</span>
+            </div>
+          </div>
+          ${
+            canAdminister
+              ? `<button type="button" class="btn btn-resolve-compact" data-resolve-blocker="${escapeHtml(blocker.key)}">Đánh dấu đã xử lý</button>`
+              : ''
+          }
+        </div>
       </div>
-      ${issueKeys ? `<div class="blocker-card-issues">${issueKeys}</div>` : ''}
-      ${
-        canAdminister
-          ? `<button type="button" class="btn-resolve" data-resolve-blocker="${escapeHtml(blocker.key)}">Đánh dấu đã xử lý</button>`
-          : ''
-      }
     </article>
   `;
 };
@@ -251,7 +260,7 @@ export async function renderDashboard(container, ctx) {
           <p class="page-subtitle">Team ${escapeHtml(projectKey)} · ${escapeHtml(ctx.teamSyncSubtitle)}</p>
         </div>
         <div class="page-actions">
-          ${canExport ? '<button type="button" class="btn" id="export-data">Xuất dữ liệu</button>' : ''}
+          ${canExport ? '<button type="button" class="btn" id="export-data">Tải file Excel</button>' : ''}
           <button type="button" class="btn btn-primary" id="go-log">Ghi Team Sync của tôi</button>
         </div>
       </header>
@@ -282,11 +291,12 @@ export async function renderDashboard(container, ctx) {
               </div>
               <div class="member-grid">
                 ${members
-                  .map(
-                    (m) => `
-                  <button type="button" class="member-card${ctx.memberFilter === m.accountId ? ' is-selected' : ''}" data-member="${escapeHtml(m.accountId)}">
+                  .map((m) => {
+                    const isMe = data?.accountId && m.accountId === data.accountId;
+                    return `
+                  <button type="button" class="member-card${ctx.memberFilter === m.accountId ? ' is-selected' : ''}${isMe ? ' is-me' : ''}" data-member="${escapeHtml(m.accountId)}">
                     ${userAvatarHtml(m.accountId, m.displayName, m.avatarUrl ?? avatars[m.accountId] ?? '', 'member-card-avatar')}
-                    <span class="member-card-name">${escapeHtml(m.displayName)}</span>
+                    <span class="member-card-name">${escapeHtml(m.displayName)}${isMe ? ' <span class="member-you-badge">Bạn</span>' : ''}</span>
                     <div class="member-sync-progress">
                       ${progressBarHtml(m.loggedToday ? 100 : 0, {
                         variant: m.loggedToday ? 'success' : 'neutral',
@@ -294,8 +304,8 @@ export async function renderDashboard(container, ctx) {
                       })}
                       <span class="member-card-status${m.loggedToday ? ' is-done' : ' is-pending'}">${m.loggedToday ? 'Đã ghi hôm nay' : 'Chưa ghi'}</span>
                     </div>
-                  </button>`
-                  )
+                  </button>`;
+                  })
                   .join('')}
               </div>
             </section>`
@@ -333,9 +343,9 @@ export async function renderDashboard(container, ctx) {
   container.querySelector('#export-data')?.addEventListener('click', async () => {
     try {
       const payload = await invoke('exportStandupData');
-      alert(`Đã chuẩn bị xuất ${payload.entryCount} bản ghi.`);
+      await downloadExcelFromCsv(payload.filename ?? 'team-sync-export.xlsx', payload.csv ?? '');
     } catch (e) {
-      alert(e?.message ?? 'Không xuất được dữ liệu.');
+      alert(e?.message ?? 'Không xuất được file Excel.');
     }
   });
 

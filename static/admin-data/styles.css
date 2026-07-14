@@ -1,0 +1,87 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #172b4d;
+  background: #ffffff;
+}
+.page { padding: 24px; max-width: 880px; }
+.page-header { margin-bottom: 20px; }
+.page-title { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+.page-subtitle, .section-filter-hint { margin: 0; color: #626f86; font-size: 13px; }
+.section { margin-bottom: 28px; }
+.section-title { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.page-loading { padding: 12px 0; color: #626f86; }
+.btn {
+  padding: 8px 12px;
+  border: 1px solid #dfe1e6;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172b4d;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { background: #f4f5f7; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: #0c66e4;
+  border-color: #0c66e4;
+  color: #ffffff;
+}
+.btn-primary:hover:not(:disabled) { background: #0055cc; }
+.btn-danger {
+  background: #ffffff;
+  border-color: #f87168;
+  color: #ae2e24;
+}
+.btn-danger:hover:not(:disabled) { background: #ffebe6; }
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 0 0 12px;
+}
+.alert p { margin: 0; }
+.alert-success { background: #dffcf0; border: 1px solid #4bce97; }
+.alert-info { background: #e9f2ff; border: 1px solid #85b8ff; }
+.alert-warning { background: #fff7d6; border: 1px solid #f5cd47; }
+.alert-error { background: #ffebe6; border: 1px solid #f87168; }
+.member-rows { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.member-row {
+  padding: 12px 14px;
+  border: 1px solid #ebecf0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+.member-row-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.member-row-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+.member-row-avatar,
+img.member-row-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex: none;
+  object-fit: cover;
+}
+.member-row-avatar.entry-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.member-row-name { margin: 0 0 4px; font-weight: 600; }
+.member-row-meta { margin: 0; font-size: 12px; color: #626f86; }
+.row-actions { display: flex; gap: 8px; margin-top: 10px; }

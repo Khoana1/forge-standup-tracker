@@ -13,6 +13,7 @@ import {
   queryAllEntries,
   summarizeStandupMembers,
 } from '../lib/standup-store.js';
+import { buildStandupCsv, standupExportFilename } from '../lib/export-csv.js';
 import {
   validatePurgeMemberPayload,
   validatePurgePayload,
@@ -124,16 +125,20 @@ export const exportStandupData = async () => {
     getTeamConfig(),
   ]);
 
-  const exportPayload = {
-    exportedAt: new Date().toISOString(),
-    settings,
-    teamConfig,
-    entryCount: entries.length,
-    entries: entries.map(({ key, ...rest }) => ({ id: key, ...rest })),
-  };
+  const exportedAt = new Date().toISOString();
+  const csv = buildStandupCsv(entries);
+  const filename = standupExportFilename(exportedAt);
 
   timer.end({ action: 'exportStandupData', entryCount: entries.length });
-  return exportPayload;
+  return {
+    exportedAt,
+    entryCount: entries.length,
+    filename,
+    csv,
+    format: 'xlsx',
+    settings,
+    teamConfig,
+  };
 };
 
 export const purgeStandupData = async ({ payload }) => {

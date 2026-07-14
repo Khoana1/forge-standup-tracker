@@ -19,7 +19,7 @@ Team Sync lets agile teams record yesterday / today / blockers updates inside Ji
 - **Admin (×3):** general settings (`useAsConfig`), team/project configuration (`useAsGetStarted`), data & privacy
 - **Project settings page:** team/project allowlist for project admins
 - **Blocker workflow:** resolve blockers; optional admin notification on new/changed blockers
-- **Data privacy:** JSON export, per-member delete, purge all standup entries
+- **Data privacy:** Excel (.xlsx) auto-download, per-member delete, purge all standup entries
 - **Automated retention purge** (daily scheduled trigger)
 
 ## UI stack
@@ -49,7 +49,7 @@ All Jira write operations run as the **current user** (`api.asUser()`). The app 
 - **Stored in Forge KVS (`storage:app`):** account ID, display name, project key, date, standup text (yesterday/today/blockers), timestamps, linked issue keys, blocker resolution metadata, admin settings
 - **Not stored:** Full Jira issue content, passwords, or third-party credentials
 - **Retention:** Configurable 7–365 days; daily scheduled purge (`purge-retention` function)
-- **Export:** Jira admins — full JSON export via Data & Privacy admin page
+- **Export:** Jira admins — Excel `.xlsx` file downloads automatically via Data & Privacy / Dashboard
 - **Delete:** Jira admins — per-member purge or purge all standup entries (settings/team config retained)
 - **Multi-site:** One Forge app ID; each installation is tenant-isolated by the platform
 

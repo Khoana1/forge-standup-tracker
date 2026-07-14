@@ -34,3 +34,36 @@ export const formatTime = (iso) => {
     return '';
   }
 };
+
+/** Download CSV with Excel-friendly UTF-8 BOM (Custom UI only). */
+export const downloadCsvFile = (filename, csv) => {
+  const blob = new Blob([`\uFEFF${csv ?? ''}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || 'team-sync-export.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * Build a real .xlsx workbook from CSV text and trigger browser download.
+ * Must run in Custom UI (has document + Blob).
+ */
+export const downloadExcelFromCsv = async (filename, csv) => {
+  const XLSX = await import('xlsx');
+  const parsed = XLSX.read(csv ?? '', { type: 'string', raw: false });
+  const sourceName = parsed.SheetNames?.[0];
+  const sourceSheet = sourceName ? parsed.Sheets[sourceName] : null;
+
+  const workbook = XLSX.utils.book_new();
+  const sheet = sourceSheet ?? XLSX.utils.aoa_to_sheet([['No data']]);
+  XLSX.utils.book_append_sheet(workbook, sheet, 'Team Sync');
+
+  const safeName = String(filename || 'team-sync-export.xlsx')
+    .replace(/\.csv$/i, '.xlsx')
+    .replace(/\.xlsx$/i, '.xlsx');
+  XLSX.writeFile(workbook, safeName.endsWith('.xlsx') ? safeName : `${safeName}.xlsx`);
+};

@@ -181,6 +181,23 @@ body {
   box-shadow: 0 0 0 1px #0c66e4;
 }
 
+.member-card.is-me {
+  border-color: #85b8ff;
+  background: #f7fbff;
+}
+
+.member-you-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e9f2ff;
+  color: #0c66e4;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .member-card-avatar,
 .entry-avatar.user-avatar,
 img.user-avatar,
@@ -1315,82 +1332,192 @@ body {
 }
 
 .blocker-card {
-  padding: 14px 16px;
-  border: 0.5px solid #dfe1e6;
-  border-radius: 8px;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #ebecf0;
+  border-radius: 14px;
   background: #ffffff;
+  box-shadow: 0 1px 3px rgba(9, 30, 66, 0.06);
 }
 
-.blocker-card.is-stale {
-  border-color: #f87168;
-  background: #fff8f7;
+.blocker-card-accent {
+  width: 4px;
+  flex: none;
+  background: #f5a623;
+}
+
+.blocker-card.is-stale .blocker-card-accent {
+  background: #e34935;
+}
+
+.blocker-card.is-new .blocker-card-accent {
+  background: #22a06b;
+}
+
+.blocker-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: 16px 18px;
+}
+
+.blocker-card-top {
+  min-width: 0;
 }
 
 .blocker-card-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .blocker-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: 600;
-  background: #f4f5f7;
-  color: #44546f;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.blocker-badge--type {
+  background: #e9f2ff;
+  color: #0c66e4;
 }
 
 .blocker-badge--stale {
-  background: #ffebe6;
+  background: #ffeceb;
   color: #ae2e24;
 }
 
 .blocker-badge--new {
-  background: #dffcf0;
+  background: #dcfff1;
   color: #216e4e;
 }
 
-.blocker-card-text {
-  margin: 0 0 10px;
-  color: #172b4d;
-  white-space: pre-wrap;
+.blocker-badge--age {
+  background: #fff0db;
+  color: #974f0c;
 }
 
-.blocker-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  color: #626f86;
+.blocker-card-text {
+  margin: 0;
+  color: #172b4d;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .blocker-card-issues {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
 .issue-pill {
-  padding: 2px 8px;
-  border: 0.5px solid #dfe1e6;
+  padding: 3px 9px;
+  border: 1px solid #cce0ff;
   border-radius: 999px;
-  background: #f7f8f9;
+  background: #e9f2ff;
   color: #0c66e4;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .issue-pill:hover {
-  background: #e9f2ff;
+  background: #cce0ff;
 }
 
-.blocker-card .btn-resolve {
-  margin-top: 4px;
+.blocker-card-divider {
+  height: 1px;
+  margin: 14px 0;
+  background: #ebecf0;
+}
+
+.blocker-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.blocker-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.blocker-card-meta .entry-avatar,
+.blocker-card-meta img.entry-avatar,
+.blocker-card-meta .entry-avatar-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.blocker-card-meta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.blocker-card-author {
+  font-size: 14px;
+  font-weight: 600;
+  color: #172b4d;
+}
+
+.blocker-card-date {
+  font-size: 12px;
+  color: #6b778c;
+}
+
+.btn-resolve-compact {
+  white-space: nowrap;
+  padding: 8px 12px;
+  border: 1px solid #dfe1e6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172b4d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}
+
+.btn-resolve-compact:hover {
+  background: #f4f5f7;
+  border-color: #b3b9c4;
+}
+
+.blocker-card.is-stale .btn-resolve-compact {
+  border-color: #ffb8af;
+  color: #ae2e24;
+}
+
+.blocker-card.is-stale .btn-resolve-compact:hover {
+  background: #ffebe6;
+}
+
+@media (max-width: 720px) {
+  .blocker-card-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-resolve-compact {
+    width: 100%;
+  }
 }

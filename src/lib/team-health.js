@@ -46,6 +46,31 @@ export const mergeTeamMembers = (
     .sort((a, b) => (a.displayName ?? '').localeCompare(b.displayName ?? ''));
 };
 
+/**
+ * Always include the current viewer so they can see their own loggedToday status,
+ * even when they are only in a project role via group membership (role actors API
+ * only returns direct user actors).
+ */
+export const ensureViewerInMembers = (members, viewer) => {
+  const accountId = viewer?.accountId;
+  if (!accountId) return members ?? [];
+
+  const list = [...(members ?? [])];
+  const existing = list.find((member) => member.accountId === accountId);
+  if (existing) {
+    if (viewer.displayName && existing.displayName === 'Team member') {
+      existing.displayName = viewer.displayName;
+    }
+    return list;
+  }
+
+  list.push({
+    accountId,
+    displayName: viewer.displayName?.trim() || 'Bạn',
+  });
+  return list.sort((a, b) => (a.displayName ?? '').localeCompare(b.displayName ?? ''));
+};
+
 export const filterEntriesToMembers = (entries, members) => {
   const allowed = new Set((members ?? []).map((member) => member.accountId).filter(Boolean));
   if (!allowed.size) return entries;

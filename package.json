@@ -14,11 +14,13 @@
     "build:daily-report-table": "esbuild src/frontend/custom-ui/daily-report-table/main.js --bundle --outfile=static/daily-report-table/app.js --format=esm --platform=browser",
     "build:dashboard-timeline": "esbuild src/frontend/custom-ui/dashboard-timeline/main.js --bundle --outfile=static/dashboard-timeline/app.js --format=esm --platform=browser",
     "build:project-app": "esbuild src/frontend/custom-ui/project-app/main.js --bundle --outfile=static/project-app/app.js --format=esm --platform=browser",
-    "build:custom-ui": "npm run build:issue-hub && npm run build:daily-report-table && npm run build:dashboard-timeline && npm run build:project-app"
+    "build:admin-data": "esbuild src/frontend/custom-ui/admin-data/main.js --bundle --outfile=static/admin-data/app.js --format=esm --platform=browser",
+    "build:custom-ui": "npm run build:issue-hub && npm run build:daily-report-table && npm run build:dashboard-timeline && npm run build:project-app && npm run build:admin-data"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",
+    "@types/node": "^26.1.1",
     "babel-jest": "^29.7.0",
     "esbuild": "^0.25.12",
     "eslint": "^8.56.0",
@@ -31,7 +33,8 @@
     "@forge/kvs": "^1.6.2",
     "@forge/react": "11.16.1",
     "@forge/resolver": "1.8.0",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "xlsx": "^0.18.5"
   },
   "jest": {
     "testEnvironment": "node",

@@ -7,6 +7,7 @@ import {
 import {
   deriveTeamMembers,
   mergeTeamMembers,
+  ensureViewerInMembers,
   filterEntriesToMembers,
   computeSprintCompletionRate,
 } from '../src/lib/team-health.js';
@@ -75,6 +76,25 @@ describe('mergeTeamMembers', () => {
     );
     expect(members).toHaveLength(1);
     expect(members[0].accountId).toBe('1');
+  });
+});
+
+describe('ensureViewerInMembers', () => {
+  it('adds the current viewer when missing from project role actors', () => {
+    const members = ensureViewerInMembers([{ accountId: '1', displayName: 'Alice' }], {
+      accountId: 'me',
+      displayName: 'Khoa',
+    });
+    expect(members).toHaveLength(2);
+    expect(members.find((m) => m.accountId === 'me')?.displayName).toBe('Khoa');
+  });
+
+  it('does not duplicate when viewer already present', () => {
+    const members = ensureViewerInMembers([{ accountId: 'me', displayName: 'Khoa' }], {
+      accountId: 'me',
+      displayName: 'Khoa',
+    });
+    expect(members).toHaveLength(1);
   });
 });
 
